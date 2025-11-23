@@ -1,0 +1,14 @@
+.footer-container{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    background-color: var(--main-color);
+    color: #ffffff;
+    padding-top: 1rem;
+    padding-bottom: 2rem;
+}
+
+.footer-section{
+    display: flex;
+    flex-direction: column;
+}
