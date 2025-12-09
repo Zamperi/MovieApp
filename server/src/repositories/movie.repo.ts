@@ -12,6 +12,7 @@ export const movieRepo = {
         prisma.movie.findUnique({
             where: { id },
         }),
+
     create: (data: MovieCreateDTO) =>
         prisma.movie.create({ data }),
 
@@ -24,5 +25,10 @@ export const movieRepo = {
     remove: (id: number) =>
         prisma.movie.delete({
             where: { id },
+        }),
+
+    findByTmdbId: (tmdbId: number) => 
+        prisma.movie.findUnique({
+            where: { tmdbId }
         }),
 };

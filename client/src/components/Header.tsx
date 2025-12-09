@@ -1,58 +1,126 @@
+import { useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import AppBar from '@mui/material/AppBar';
-import Toolbar from '@mui/material/Toolbar';
-import Box from '@mui/material/Box';
-import Container from '@mui/material/Container';
+import {
+  AppBar,
+  Toolbar,
+  Box,
+  Container,
+  IconButton,
+  Button,
+  Menu,
+  MenuItem,
+  useTheme,
+  useMediaQuery,
+} from '@mui/material';
+import {
+  DarkMode as DarkModeIcon,
+  LightMode as LightModeIcon,
+  AccountCircle,
+  Language,
+  Menu as MenuIcon,
+} from '@mui/icons-material';
 import { useColorMode } from '../context/ThemeProvider';
-import { IconButton, useTheme } from '@mui/material';
-import Button from '@mui/material/Button';
-import { DarkMode as DarkModeIcon, LightMode as LightModeIcon, AccountCircle } from '@mui/icons-material';
+
+const navItems = [
+  { label: 'Home', to: '/home' },
+  { label: 'Movies', to: '/movies' },
+  { label: 'People', to: '/people' },
+  { label: 'Groups', to: '/groups' },
+  { label: 'Reviews', to: '/reviews' },
+];
 
 export default function Header() {
-    const location = useLocation();
-    const navigate = useNavigate();
-    const { mode, toggleColorMode } = useColorMode();
-    const theme = useTheme();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { mode, toggleColorMode } = useColorMode();
+  const theme = useTheme();
+  const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
 
-    function handleClick() {
-        navigate('/signin', {
-            state: { from: location.pathname },
-        });
-    }
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
-    return (
-        <AppBar
-            position="static"
-            elevation={0}
-            color="default"
-            sx={{
-                bgcolor: 'background.paper',
-                borderBottom: `1px solid ${theme.palette.divider}`,
-            }}
-        >
-            <Container maxWidth="lg">   {/* ← tämä rajoittaa leveyden */}
-                <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
+  const handleSignInClick = () => {
+    navigate('/signin', { state: { from: location.pathname } });
+  };
 
-                    <Box sx={{ display: 'flex', gap: '1rem' }}>
-                        <Button component={NavLink} to="/home" color="inherit">Home</Button>
-                        <Button component={NavLink} to="/movies" color="inherit">Movies</Button>
-                        <Button component={NavLink} to="/people" color="inherit">People</Button>
-                        <Button component={NavLink} to="/groups" color="inherit">Groups</Button>
-                        <Button component={NavLink} to="/reviews" color='inherit'>Reviews</Button>
-                    </Box>
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
 
-                    <Box sx={{ display: 'flex', gap: '0.5rem' }}>
-                        <IconButton edge="end" onClick={toggleColorMode} color="inherit">
-                            {mode === 'light' ? <DarkModeIcon /> : <LightModeIcon />}
-                        </IconButton>
+  const handleMenuClose = () => setAnchorEl(null);
 
-                        <IconButton onClick={handleClick} color="inherit">
-                            <AccountCircle />
-                        </IconButton>
-                    </Box>
+  const handleNavClick = (to: string) => {
+    navigate(to);
+    handleMenuClose();
+  };
 
-                </Toolbar>
-            </Container>
-        </AppBar>
-    );
+  return (
+    <AppBar
+      position="static"
+      elevation={0}
+      color="default"
+      sx={{
+        bgcolor: 'background.paper',
+        borderBottom: `1px solid ${theme.palette.divider}`,
+      }}
+    >
+      <Container maxWidth="lg">
+        <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
+          {/* Vasen puoli: logo / nav */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            {/* Voit lisätä logon tähän myöhemmin */}
+            {isDesktop ? (
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                {navItems.map((item) => (
+                  <Button
+                    key={item.to}
+                    component={NavLink}
+                    to={item.to}
+                    color="inherit"
+                    sx={{ fontWeight: 500 }}
+                  >
+                    {item.label}
+                  </Button>
+                ))}
+              </Box>
+            ) : (
+              <>
+                <IconButton edge="start" onClick={handleMenuOpen}>
+                  <MenuIcon />
+                </IconButton>
+                <Menu
+                  anchorEl={anchorEl}
+                  open={Boolean(anchorEl)}
+                  onClose={handleMenuClose}
+                  anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                  transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+                >
+                  {navItems.map((item) => (
+                    <MenuItem
+                      key={item.to}
+                      onClick={() => handleNavClick(item.to)}
+                    >
+                      {item.label}
+                    </MenuItem>
+                  ))}
+                </Menu>
+              </>
+            )}
+          </Box>
+
+          {/* Oikea puoli: kieli, teema, profiili */}
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <IconButton>
+              <Language />
+            </IconButton>
+            <IconButton edge="end" onClick={toggleColorMode} color="inherit">
+              {mode === 'light' ? <DarkModeIcon /> : <LightModeIcon />}
+            </IconButton>
+            <IconButton onClick={handleSignInClick} color="inherit">
+              <AccountCircle />
+            </IconButton>
+          </Box>
+        </Toolbar>
+      </Container>
+    </AppBar>
+  );
 }

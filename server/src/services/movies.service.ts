@@ -1,17 +1,28 @@
 import { prisma } from '../lib/prisma';
+import { fetchTmdbMovieById } from '../lib/tmdbMovie';
 import { movieRepo } from '../repositories/movie.repo';
 import { MovieCreateDTO } from '../schemas/movie.schema';
 
 export const movieService = {
     list: () => movieRepo.list(),
 
-    get: async (id: number) => {
-        return movieRepo.findById(id); // palauttaa Movie | null
+    getById: (id: number) => movieRepo.findById(id),
+
+    getOrFetchByTmdbId: async (tmdbId: number) => {
+        const cached = await movieRepo.findByTmdbId(tmdbId);
+        if(cached) return cached
+
+        const dto = await fetchTmdbMovieById(tmdbId);
+
+        return prisma.$transaction(async()=>{
+            const created = movieRepo.create(dto);
+            return created;
+        });
+        
     },
 
     create: (dto: MovieCreateDTO) =>
         prisma.$transaction(async () => {
-            // esim. duplikaattitarkistus tähän tarvittaessa
             return movieRepo.create(dto);
         }),
 

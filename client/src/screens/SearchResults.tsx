@@ -1,7 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Box, Typography, Collapse, Container } from '@mui/material';
-import Grid from '@mui/material/Grid';
 import { motion } from 'framer-motion';
 import { searchMovies } from '../services/tmdbService';
 import MovieCard from '../components/MovieCard';
@@ -82,9 +81,17 @@ export default function SearchResults() {
                 mt: { xs: '0.5rem', sm: '1rem', md: '1.5rem' },
                 borderRadius: { xs: 0, md: '0.75rem' },
                 boxShadow: { xs: 'none', md: 3 },
+                overflowX: 'hidden',
             }}
         >
-            <Container maxWidth="lg">
+            <Container
+                maxWidth="lg"
+                disableGutters
+                sx={{
+                    px: { xs: 1.5, sm: 2, md: 3 },
+                    boxSizing: 'border-box',
+                }}
+            >
                 <Typography
                     variant="h4"
                     component="h1"
@@ -131,17 +138,35 @@ export default function SearchResults() {
                     </Box>
 
                     {/* Results */}
-                    <Box sx={{ flexGrow: 1 }}>
-                        <Grid
-                            container
-                            spacing={{ xs: 2, sm: 2.5, md: 3 }}
+                    <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                        <Box
+                            sx={{
+                                display: 'grid',
+                                width: '100%',
+                                gridTemplateColumns: {
+                                    xs: 'repeat(2, minmax(0, 1fr))', // 2 korttia / rivi mobiilissa
+                                    sm: 'repeat(3, minmax(0, 1fr))',
+                                    md: 'repeat(4, minmax(0, 1fr))',
+                                    lg: 'repeat(4, minmax(0, 1fr))',
+                                },
+                                gap: (theme) =>
+                                    ({
+                                        xs: theme.spacing(2),
+                                        sm: theme.spacing(2.5),
+                                        md: theme.spacing(3),
+                                    } as any),
+                            }}
                         >
                             {visibleMovies.map((movie, index) => (
-                                <Grid
+                                <Box
                                     key={movie.id}
-                                    size={{ xs: 12, sm: 6, md: 3, lg: 3 }}
+                                    sx={{
+                                        width: '100%',
+                                        maxWidth: '100%',
+                                    }}
                                 >
                                     <motion.div
+                                        style={{ width: '100%' }}
                                         initial={{ opacity: 0, y: 4 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{
@@ -160,9 +185,9 @@ export default function SearchResults() {
                                             title={movie.title}
                                         />
                                     </motion.div>
-                                </Grid>
+                                </Box>
                             ))}
-                        </Grid>
+                        </Box>
                     </Box>
                 </Box>
             </Container>

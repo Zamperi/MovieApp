@@ -1,9 +1,10 @@
 import { useNavigate } from 'react-router-dom';
-import Card from '@mui/material/Card';
+import { Card, Box, Rating, IconButton } from '@mui/material';
 import CardActionArea from '@mui/material/CardActionArea';
 import CardMedia from '@mui/material/CardMedia';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
+import { BookmarkAdd } from '@mui/icons-material';
 
 type Props = {
     id: number;
@@ -20,6 +21,7 @@ export default function MovieCard({ id, title, posterUrl }: Props) {
 
     return (
         <Card
+            component='div'
             onClick={handleClick}
             sx={{
                 width: '100%',              // Täyttää Grid-itemin
@@ -35,17 +37,68 @@ export default function MovieCard({ id, title, posterUrl }: Props) {
                 },
             }}
         >
-            <CardActionArea sx={{ width: '100%' }}>
-                <CardMedia
-                    component="img"
-                    image={posterUrl}
-                    alt={title}
+            <CardActionArea component='div' sx={{ width: '100%' }}>
+                {/*Kuvakontti + overlay*/}
+                <Box
                     sx={{
+                        position: 'relative',
                         width: '100%',
-                        aspectRatio: '2 / 3',
-                        objectFit: 'cover',
+                        aspectRatio: '2/3',
                     }}
-                />
+                >
+                    <CardMedia
+                        component="img"
+                        image={posterUrl}
+                        alt={title}
+                        sx={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                        }}
+                    />
+                    {/*Overlays */}
+                    <Box
+                        sx={{
+                            position: 'absolute',
+                            top: '0.5rem',
+                            left: '0.5rem',
+                            bgcolor: 'rgba(0,0,0,0.6)',
+                            borderRadius: '0.5rem',
+                            p: '0.2rem 0.35rem'
+                        }}>
+                        <Rating
+                            value={5}
+                            precision={0.1}
+                            max={5}
+                            name='simple-controlled'
+                            size='small'
+                        ></Rating>
+                    </Box>
+                    <Box
+                        sx={{
+                            position: 'absolute',
+                            top: '0.5rem',
+                            right: '0.5rem',
+                            borderRadius: '9999px',
+                            bgcolor: 'rgba(0,0,0,0.55)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}
+                    >
+                        <IconButton
+                            size="small"
+                            sx={{
+                                p: '0.15rem',
+                                color: 'common.white',
+                                '&:hover': {
+                                    bgcolor: 'rgba(255,255,255,0.12)',
+                                },
+                            }}
+                        ><BookmarkAdd/>
+                        </IconButton>
+                    </Box>
+                </Box>
                 <CardContent
                     sx={{
                         padding: '0.75rem 0.9rem 0.9rem',

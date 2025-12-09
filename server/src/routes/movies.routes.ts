@@ -14,6 +14,9 @@ router.get('/upcoming', movieListController.upcoming);
 router.get('/', moviesController.list);
 
 // GET /api/movies/:id
+router.get('/:tmdbId', moviesController.getByTmdbId);
+
+router.get('/', moviesController.list);
 router.get('/:id', moviesController.get);
 
 // POST /api/movies

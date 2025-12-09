@@ -154,8 +154,8 @@ export async function getMovies(listType: MovieListType): Promise<MovieResult[]>
         (r.title || r.original_title || r.release_date
           ? 'movie'
           : r.name || r.first_air_date
-          ? 'tv'
-          : undefined);
+            ? 'tv'
+            : undefined);
 
       return {
         id: r.id,
@@ -173,5 +173,141 @@ export async function getMovies(listType: MovieListType): Promise<MovieResult[]>
   } catch (error) {
     console.error('Fetching movies failed for', listType, error);
     return [];
+  }
+}
+
+export async function getMovie(tmdbId: Number) {
+  const apiUrl = import.meta.env.VITE_API_URL;
+
+  try {
+    const response = await fetch(`${apiUrl}/api/movies/${tmdbId}`);
+
+    if (!response.ok) {
+      console.error('Movies endpoint failed with status', response.status);
+      return null;
+    }
+
+    const data = await response.json();
+
+    return {
+      tmdbId: data.tmdbId as number,
+      title: data.title as string,
+      release_date: data.release_date as string ?? undefined,
+      poster_path: data.poster_path ?? undefined,
+      backdrop_path: data.backdrop_path ?? undefined,
+      overview: data.overview ?? undefined,
+      runtime: data.runtime ?? undefined,
+      genres: data.genres ?? undefined,
+    }
+
+  } catch (error) {
+    console.error('Fetching movie failed')
+    return null;
+  }
+}
+
+export type MovieType = {
+  tmdbId: number,
+  title: string,
+  release_date: string,
+  poster_path?: string,
+  backdrop_path?: string,
+  overview?: string,
+  runtime: number,
+  genres: string[],
+}
+
+// --- Uudet tyypit ja funktiot ihmisille --- //
+
+export interface PersonResult {
+  id: number;
+  name: string;
+  profile_path?: string | null;
+  known_for_department?: string;
+  popularity?: number;
+}
+
+type PeopleListResponse = {
+  page: number;
+  results: Array<{
+    id: number;
+    name: string;
+    profile_path?: string | null;
+    known_for_department?: string;
+    popularity?: number;
+  }>;
+  total_pages: number;
+  total_results: number;
+};
+
+export async function getTrendingPeople(): Promise<PersonResult[]> {
+  const apiUrl = import.meta.env.VITE_API_URL;
+
+  try {
+    const response = await fetch(`${apiUrl}/api/people/trending`);
+
+    if (!response.ok) {
+      console.error('People endpoint failed with status', response.status);
+      return [];
+    }
+
+    const data = (await response.json()) as PeopleListResponse;
+
+    if (!Array.isArray(data.results)) {
+      console.error('People response missing results array');
+      return [];
+    }
+
+    return data.results.map((p) => ({
+      id: p.id,
+      name: p.name,
+      profile_path: p.profile_path ?? null,
+      known_for_department: p.known_for_department,
+      popularity: p.popularity,
+    }));
+  } catch (error) {
+    console.error('Fetching trending people failed', error);
+    return [];
+  }
+}
+
+// --- Yksittäisen henkilön haku /api/person/:id --- //
+
+export interface PersonDetails {
+  id: number;
+  name: string;
+  biography?: string;
+  birthday?: string | null;
+  deathday?: string | null;
+  place_of_birth?: string | null;
+  known_for_department?: string;
+  profile_path?: string | null;
+  homepage?: string | null;
+  imdb_id?: string | null;
+  popularity?: number;
+  also_known_as?: string[];
+}
+
+export async function getPerson(personId: number): Promise<PersonDetails | null> {
+  const apiUrl = import.meta.env.VITE_API_URL;
+
+  if (!Number.isFinite(personId) || personId <= 0) {
+    console.error("Invalid person id", personId);
+    return null;
+  }
+
+  try {
+    const response = await fetch(`${apiUrl}/api/people/${personId}`);
+
+    if (!response.ok) {
+      console.error("Person endpoint failed with status", response.status);
+      return null;
+    }
+
+    const data = (await response.json()) as PersonDetails;
+    return data;
+  } catch (error) {
+    console.error("Fetching person failed", error);
+    return null;
   }
 }

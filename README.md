@@ -26,3 +26,8 @@ server/
       express.d.ts     
   prisma/
     schema.prisma       //database schemas
+
+
+## Komennot
+npm run dev -- --host 0.0.0.0 --port 5173 //Frontend
+npm run dev //Backend
