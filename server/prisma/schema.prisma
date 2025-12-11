@@ -30,12 +30,17 @@ model User {
   id          Int      @id @default(autoincrement())
   username    String
   email       String
+  firstname   String
+  lastname    String
 
   // Yksi käyttäjä voi omistaa monta ryhmää
   ownedGroups Group[]  @relation("GroupOwner")
 
   // Yksi käyttäjä voi kuulua moneen ryhmään
   groups      Group[]  @relation("GroupMembers")
+
+  refreshTokens RefreshToken[]
+  passwordHash   String
 }
 
 model Group {
@@ -50,4 +55,15 @@ model Group {
   members   User[]   @relation("GroupMembers")
 
   createdAt DateTime @default(now())
+}
+
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  tokenId   String   @unique
+  tokenHash String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  revoked   Boolean  @default(false)
 }

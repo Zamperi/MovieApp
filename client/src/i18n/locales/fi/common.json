@@ -1,0 +1,16 @@
+{
+  "navigation": {
+    "home": "Etusivu",
+    "movies": "Elokuvat",
+    "people": "Henkilöt",
+    "groups": "Ryhmät",
+    "reviews": "Arvostelut"
+  },
+  "user": {
+    "myAccount": "Oma tili",
+    "logout": "Kirjaudu ulos"
+  },
+  "auth": {
+    "loggedOut": "Kirjauduit ulos"
+  }
+}

@@ -16,6 +16,8 @@ import User from './screens/User';
 import MoviePage from './screens/MoviePage';
 import Signin from './screens/Signin';
 import PersonPage from './screens/PersonPage';
+import PageLayout from './layout/PageLayout';
+import NotFoundPage from './screens/NotFoundPage';
 
 export default function App() {
 
@@ -33,18 +35,75 @@ export default function App() {
           <Box component='main' sx={{ flexGrow: 1 }}>
             <SearchBar />
             <Routes>
-              <Route path="/home" element={<Home></Home>}></Route>
-              <Route path="/movies" element={<Movies></Movies>} />
-              <Route path="/people" element={<People />} />
-              <Route path="/groups" element={<Groups />}></Route>
-              <Route path="/reviews" element={<Reviews />}></Route>
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/search" element={<SearchResults />} />
-              <Route path="/user" element={<User></User>} />
-              <Route path="/signin" element={<Signin />} />
-              <Route path="/movie/:id" element={<MoviePage />} />
-              <Route path="/person/:id" element={<PersonPage />} />
-              <Route path="/" element={<Navigate to="/home" replace />} />
+              <Route path="/home" element={
+                <PageLayout>
+                  <Home />
+                </PageLayout>
+              } />
+
+              <Route path="/movies" element={
+                <PageLayout>
+                  <Movies />
+                </PageLayout>
+              } />
+
+              <Route path="/people" element={
+                <PageLayout>
+                  <People />
+                </PageLayout>
+              } />
+
+              <Route path="/groups" element={
+                <PageLayout>
+                  <Groups />
+                </PageLayout>
+              } />
+
+              <Route path="/reviews" element={
+                <PageLayout>
+                  <Reviews />
+                </PageLayout>
+              } />
+
+              <Route path="/settings" element={
+                <PageLayout>
+                  <Settings />
+                </PageLayout>
+              } />
+
+              <Route path="/user" element={
+                <PageLayout>
+                  <User />
+                </PageLayout>
+              } />
+
+              <Route path="/signin" element={
+                <PageLayout>
+                  <Signin />
+                </PageLayout>
+              } />
+
+              {/* PERSON PAGE */}
+              <Route path="/person/:id" element={
+                <PageLayout>
+                  <PersonPage />
+                </PageLayout>
+              } />
+
+              {/* MOVIE PAGE – TÄYSILEVEÄ */}
+              <Route path="/movie/:id" element={
+                <PageLayout fullWidth>
+                  <MoviePage />
+                </PageLayout>
+              } />
+
+              {/* Not found page */}
+                <Route path="*" element={
+                  <PageLayout>
+                    <NotFoundPage></NotFoundPage>
+                  </PageLayout>
+                } />
+
             </Routes>
           </Box>
           <Footer />
