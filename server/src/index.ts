@@ -1,15 +1,23 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import moviesRouter from './routes/movies.routes';
 import usersRouter from './routes/users.routes';
 import searchRouter from './routes/search.routes';
 import groupRouter from './routes/group.routes';
 import peopleRouter from './routes/people.routes';
+import userRouter from './routes/user.routes';
+
+const FRONTEND_URL = process.env.FRONTEND_URL;
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: FRONTEND_URL,
+  credentials: true,    //allows cookie sending
+}));
 app.use(express.json());
+app.use(cookieParser());
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
 
@@ -18,6 +26,7 @@ app.use('/api/people', peopleRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/search', searchRouter);
 app.use('/api/groups', groupRouter);
+app.use('/api/auth/', userRouter);
 //app.use/('/api/reviews')
 //app.use('/api/user')
 

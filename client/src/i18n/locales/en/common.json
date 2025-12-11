@@ -1,0 +1,16 @@
+{
+  "navigation": {
+    "home": "Home",
+    "movies": "Movies",
+    "people": "People",
+    "groups": "Groups",
+    "reviews": "Reviews"
+  },
+  "user": {
+    "myAccount": "My account",
+    "logout": "Log out"
+  },
+  "auth": {
+    "loggedOut": "Logged out"
+  }
+}
