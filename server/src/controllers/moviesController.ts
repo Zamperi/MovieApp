@@ -38,7 +38,6 @@ export const moviesController = {
             const movie = await movieService.getOrFetchByTmdbId(tmdbId);
             return res.status(200).json(movie);
         } catch (error) {
-
             return res.status(502).json({ error: 'Failed to fetch from TMDB' });
         }
     },
