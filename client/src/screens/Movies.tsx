@@ -178,7 +178,7 @@ export default function Movies() {
                     >
                       {isLoaded ? (
                         <MovieCard
-                          id={movie!.id}
+                          tmdbId={movie!.id}
                           posterUrl={
                             movie!.poster_path
                               ? `${IMAGE_BASE_URL}${movie!.poster_path}`

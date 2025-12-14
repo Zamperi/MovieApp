@@ -1,5 +1,28 @@
 import { z } from "zod";
 
+/* =========================
+   Shared error response
+========================= */
+export const ErrorResponseSchema = z.object({
+  error: z.string(),
+  message: z.string(),
+  details: z.unknown().optional(),
+});
+export type ErrorResponse = z.infer<typeof ErrorResponseSchema>;
+
+/* =========================
+   Legacy CRUD (kept)
+========================= */
+export const MovieCreateSchema = z.object({
+  title: z.string().min(1),
+  overview: z.string().optional().nullable(),
+});
+export type MovieCreateDTO = z.infer<typeof MovieCreateSchema>;
+
+/* =========================
+   Movie-fetch (spec-aligned)
+========================= */
+
 /** 1) Input boundary: /api/movies/:tmdbId */
 export const MovieIdParamSchema = z.object({
   tmdbId: z.coerce.number().int().positive(),

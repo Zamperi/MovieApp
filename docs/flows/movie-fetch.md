@@ -19,7 +19,7 @@ sequenceDiagram
     API-->>UI: 200 MovieResponseDTO
   else cache miss / stale
     DB-->>API: none / stale row
-    API->>TMDB: GET /movie/{tmdbId}
+    API->>TMDB: GET /api/movies/{tmdbId}
     TMDB-->>API: raw JSON
     API->>V2: parse & validate TmdbMovieRaw
     V2-->>API: TmdbMovieRaw (trusted)
