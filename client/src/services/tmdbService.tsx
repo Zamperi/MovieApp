@@ -1,5 +1,11 @@
 // --- Yleiset tyypit vastaukselle --- //
 
+export type ApiErrorResponse = {
+  error: string;
+  message: string;
+  details?: unknown;
+};
+
 export type IntentKind = 'collection' | 'person' | 'title' | 'multi';
 
 export interface SearchFacets {
@@ -176,46 +182,81 @@ export async function getMovies(listType: MovieListType): Promise<MovieResult[]>
   }
 }
 
-export async function getMovie(tmdbId: Number) {
+export async function getMovie(tmdbId: number): Promise<MovieType | null> {
   const apiUrl = import.meta.env.VITE_API_URL;
+
+  // Vastaa backendin VALIDATION_ERROR-logiikkaa
+  if (!Number.isFinite(tmdbId) || tmdbId <= 0 || !Number.isInteger(tmdbId)) {
+    console.error("Invalid tmdbId", tmdbId);
+    return null;
+  }
 
   try {
     const response = await fetch(`${apiUrl}/api/movies/${tmdbId}`);
 
+    const contentType = response.headers.get("content-type") ?? "";
+    const isJson = contentType.includes("application/json");
+    const body = isJson ? await response.json() : null;
+
     if (!response.ok) {
-      console.error('Movies endpoint failed with status', response.status);
+      // Backendin virhemuoto: { error, message, details? }
+      const err = body as Partial<ApiErrorResponse> | null;
+
+      console.error("getMovie failed", {
+        status: response.status,
+        error: err?.error,
+        message: err?.message,
+        details: err?.details,
+      });
+
+      // Halutessasi voit branchata error-koodin mukaan:
+      // - VALIDATION_ERROR
+      // - MOVIE_NOT_FOUND
+      // - UPSTREAM_TMDB_ERROR
+      // - UPSTREAM_SCHEMA_MISMATCH
+      // - DB_ERROR
       return null;
     }
 
-    const data = await response.json();
+    // Backend palauttaa MovieResponseDTO:n
+    const data = body as MovieType;
 
-    return {
-      tmdbId: data.tmdbId as number,
-      title: data.title as string,
-      release_date: data.release_date as string ?? undefined,
-      poster_path: data.poster_path ?? undefined,
-      backdrop_path: data.backdrop_path ?? undefined,
-      overview: data.overview ?? undefined,
-      runtime: data.runtime ?? undefined,
-      genres: data.genres ?? undefined,
+    if (
+      typeof data?.tmdbId !== "number" ||
+      typeof data?.title !== "string" ||
+      !Array.isArray(data?.genres)
+    ) {
+      console.error("Unexpected MovieResponseDTO shape:", data);
+      return null;
     }
 
+    return {
+      tmdbId: data.tmdbId,
+      title: data.title,
+      overview: data.overview ?? null,
+      posterUrl: data.posterUrl ?? null,
+      backdropUrl: data.backdropUrl ?? null,
+      releaseDate: data.releaseDate ?? null,
+      runtimeMinutes: data.runtimeMinutes ?? null,
+      genres: data.genres ?? [],
+    };
   } catch (error) {
-    console.error('Fetching movie failed')
+    console.error("Fetching movie failed", error);
     return null;
   }
 }
 
+
 export type MovieType = {
-  tmdbId: number,
-  title: string,
-  release_date: string,
-  poster_path?: string,
-  backdrop_path?: string,
-  overview?: string,
-  runtime: number,
-  genres: string[],
-}
+  tmdbId: number;
+  title: string;
+  overview: string | null;
+  posterUrl: string | null;
+  backdropUrl: string | null;
+  releaseDate: string | null;
+  runtimeMinutes: number | null;
+  genres: string[];
+};
 
 // --- Uudet tyypit ja funktiot ihmisille --- //
 

@@ -175,7 +175,7 @@ export default function SearchResults() {
                                         }}
                                     >
                                         <MovieCard
-                                            id={movie.id}
+                                            tmdbId={movie.id}
                                             posterUrl={
                                                 movie.poster_path
                                                     ? imageBaseUrl +

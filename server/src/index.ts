@@ -8,6 +8,7 @@ import searchRouter from './routes/search.routes';
 import groupRouter from './routes/group.routes';
 import peopleRouter from './routes/people.routes';
 import userRouter from './routes/user.routes';
+import docsRouter from './routes/docs.routes';
 
 const FRONTEND_URL = process.env.FRONTEND_URL;
 
@@ -27,6 +28,7 @@ app.use('/api/users', usersRouter);
 app.use('/api/search', searchRouter);
 app.use('/api/groups', groupRouter);
 app.use('/api/auth/', userRouter);
+app.use('/api/docs', docsRouter);
 //app.use/('/api/reviews')
 //app.use('/api/user')
 
@@ -37,7 +39,7 @@ if (process.env.NODE_ENV !== 'test') {
   const port: number = Number(process.env.PORT) || 4000;
 
   app.listen(port, () => {
-    console.log(`Server running on http://0.0.0.0:${port}`);
+    console.log(`Server running on http://localhost:${port}`);
   });
 }
 

@@ -80,7 +80,7 @@ export default function Movies() {
         mt: { xs: "0.5rem", md: "1.5rem" },
         borderRadius: { xs: 0, md: "0.75rem" },
         boxShadow: { xs: "none", md: 3 },
-        overflowX: "hidden", // varmistetaan ettei mikään työnnä yli
+        overflowX: "hidden",
       }}
     >
       <Container
@@ -178,7 +178,7 @@ export default function Movies() {
                     >
                       {isLoaded ? (
                         <MovieCard
-                          id={movie!.id}
+                          tmdbId={movie!.id}
                           posterUrl={
                             movie!.poster_path
                               ? `${IMAGE_BASE_URL}${movie!.poster_path}`

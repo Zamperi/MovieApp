@@ -175,7 +175,7 @@ export default function Home() {
                                         }}
                                     >
                                         <MovieCard
-                                            id={movie.id}
+                                            tmdbId={movie.id}
                                             title={movie.title}
                                             posterUrl={
                                                 movie.poster_path
