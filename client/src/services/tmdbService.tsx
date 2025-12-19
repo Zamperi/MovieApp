@@ -1,166 +1,151 @@
-// --- Yleiset tyypit vastaukselle --- //
+// tmdbService.tsx
+
+/* =========================
+   Shared API error contract
+   (matches backend ErrorResponse convention)
+========================= */
 
 export type ApiErrorResponse = {
+  status: number;
   error: string;
   message: string;
   details?: unknown;
 };
 
-export type IntentKind = 'collection' | 'person' | 'title' | 'multi';
+class ApiError extends Error {
+  public readonly status: number;
+  public readonly payload?: ApiErrorResponse;
+
+  constructor(status: number, message: string, payload?: ApiErrorResponse) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.payload = payload;
+  }
+}
+
+/* =========================
+   Helpers
+========================= */
+
+function isValidPositiveInt(n: number): boolean {
+  return Number.isFinite(n) && Number.isInteger(n) && n > 0;
+}
+
+async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(url, init);
+
+  if (res.ok) {
+    return (await res.json()) as T;
+  }
+
+  // Try parse ErrorResponse, fallback to generic
+  let payload: ApiErrorResponse | undefined;
+  try {
+    payload = (await res.json()) as ApiErrorResponse;
+  } catch {
+    // ignore
+  }
+
+  const message =
+    payload?.message ??
+    `Request failed with status ${res.status} (${res.statusText})`;
+
+  throw new ApiError(res.status, message, payload);
+}
+
+/* =========================
+   Search (kept as-is; uses proxy raw response)
+========================= */
+
+export type IntentKind = "collection" | "person" | "title" | "multi";
 
 export interface SearchFacets {
   genres: number[];
-  years: string[];       // huom: palvelu palauttaa stringejä
-  mediaTypes: Array<'movie' | 'tv'>;
+  years: string[]; // backend returns strings
+  mediaTypes: Array<"movie" | "tv">;
 }
 
-export type RawResult = {
-  // yhteiset
+type RawResult = {
   id: number;
-  adult?: boolean;
-  genre_ids?: number[];
-  overview?: string;
-  popularity?: number;
-  poster_path?: string;
-  backdrop_path?: string;
-  vote_average?: number;
-  vote_count?: number;
-  original_language?: string;
-  media_type?: 'movie' | 'tv';
 
-  // elokuva-kentät
+  // movie fields
   title?: string;
   original_title?: string;
   release_date?: string;
 
-  // tv-kentät
+  // tv fields
   name?: string;
   original_name?: string;
   first_air_date?: string;
-};
 
-export interface SearchResponse {
-  query: string;
-  intents: IntentKind[];
-  count: number;
-  facets: SearchFacets;
-  results: RawResult[];
-}
-
-// --- UI:lle sopiva normalisoitu "MovieResult" --- //
-
-export interface MovieResult {
-  id: number;
-  title: string;             // yhdistetään title/name
+  // shared
   overview?: string;
   genre_ids?: number[];
-  poster_path?: string;
-  release_date?: string;     // yhdistetään release_date/first_air_date
-  media_type?: 'movie' | 'tv';
+  poster_path?: string | null;
+  media_type?: "movie" | "tv";
+  popularity?: number;
+  vote_average?: number;
+  vote_count?: number;
+};
+
+type TmdbSearchResponse = {
+  intent?: IntentKind;
+  facets?: SearchFacets;
+  results: RawResult[];
+};
+
+// UI normalized search result (not the same as list DTO!)
+export interface MovieResult {
+  id: number;
+  title: string;
+  overview?: string;
+  genre_ids?: number[];
+  poster_path?: string | null;
+  release_date?: string;
+  media_type?: "movie" | "tv";
   popularity?: number;
   vote_average?: number;
   vote_count?: number;
 }
 
-// --- API-kutsu: palauttaa koko vastauksen sellaisenaan --- //
+async function fetchSearch(query: string): Promise<TmdbSearchResponse | null> {
+  const apiUrl = import.meta.env.VITE_API_URL;
 
-export async function fetchSearch(query: string): Promise<SearchResponse | null> {
-  const api_url = import.meta.env.VITE_API_URL;
   const q = query.trim();
   if (!q) return null;
 
-  const res = await fetch(`${api_url}/api/search?q=${encodeURIComponent(q)}`);
-  if (!res.ok) {
-    throw new Error(`Search failed with status ${res.status}`);
-  }
+  try {
+    const data = await fetchJson<TmdbSearchResponse>(
+      `${apiUrl}/api/search?query=${encodeURIComponent(q)}`
+    );
 
-  const data = (await res.json()) as SearchResponse;
-
-  // Kevyt rakennevalidointi: varmistetaan että kriittiset kentät löytyvät
-  if (
-    typeof data.query !== 'string' ||
-    !Array.isArray(data.intents) ||
-    typeof data.count !== 'number' ||
-    !data.facets ||
-    !Array.isArray(data.results)
-  ) {
-    console.warn('Unexpected search response structure:', data);
+    if (!Array.isArray(data.results)) return null;
+    return data;
+  } catch (err) {
+    console.error("Fetching search failed", err);
     return null;
   }
-
-  return data;
 }
 
-// --- Apufunktio: normalisoi results-listan UI:lle --- //
-
-// tmdbService.tsx
 export async function searchMovies(query: string): Promise<MovieResult[]> {
   const q = query.trim();
   if (!q) return [];
+
   try {
-    const data = await fetchSearch(q);       // voi heittää
+    const data = await fetchSearch(q);
     if (!data) return [];
-    return data.results.map((r) => {
-      const title = r.title ?? r.name ?? r.original_title ?? r.original_name ?? 'Untitled';
-      const date = r.release_date ?? r.first_air_date;
-      const media_type =
-        r.media_type ??
-        (r.title || r.original_title || r.release_date ? 'movie' : (r.name || r.first_air_date ? 'tv' : undefined));
-      return {
-        id: r.id,
-        title,
-        overview: r.overview,
-        genre_ids: r.genre_ids,
-        poster_path: r.poster_path,
-        release_date: date,
-        media_type,
-        popularity: r.popularity,
-        vote_average: r.vote_average,
-        vote_count: r.vote_count,
-      };
-    });
-  } catch (err) {
-    console.error('searchMovies failed:', err);
-    return [];
-  }
-}
-
-export type MovieListType = 'popular' | 'top_rated' | 'now_playing' | 'upcoming';
-
-type TmdbListResponse = {
-  page: number;
-  results: RawResult[];
-  total_pages: number;
-  total_results: number;
-};
-
-export async function getMovies(listType: MovieListType): Promise<MovieResult[]> {
-  const api_url = import.meta.env.VITE_API_URL;
-
-  try {
-    const response = await fetch(`${api_url}/api/movies/${listType}`);
-
-    if (!response.ok) {
-      console.error(`Movies endpoint failed for ${listType} with status`, response.status);
-      return [];
-    }
-
-    const data = (await response.json()) as TmdbListResponse;
-
-    if (!Array.isArray(data.results)) {
-      console.error('Movies response missing results array for', listType);
-      return [];
-    }
 
     return data.results.map((r) => {
-      const title = r.title ?? r.name ?? r.original_title ?? r.original_name ?? 'Untitled';
+      const title =
+        r.title ?? r.name ?? r.original_title ?? r.original_name ?? "Untitled";
       const date = r.release_date ?? r.first_air_date;
       const media_type =
         r.media_type ??
         (r.title || r.original_title || r.release_date
-          ? 'movie'
+          ? "movie"
           : r.name || r.first_air_date
-            ? 'tv'
+            ? "tv"
             : undefined);
 
       return {
@@ -176,89 +161,134 @@ export async function getMovies(listType: MovieListType): Promise<MovieResult[]>
         vote_count: r.vote_count,
       };
     });
-  } catch (error) {
-    console.error('Fetching movies failed for', listType, error);
+  } catch (err) {
+    console.error("searchMovies failed:", err);
     return [];
   }
 }
 
-export async function getMovie(tmdbId: number): Promise<MovieType | null> {
-  const apiUrl = import.meta.env.VITE_API_URL;
+/* =========================
+   Movie lists (OpenAPI-aligned DTOs)
+   GET /api/movies/lists/{listType}?page=n
+========================= */
 
-  // Vastaa backendin VALIDATION_ERROR-logiikkaa
-  if (!Number.isFinite(tmdbId) || tmdbId <= 0 || !Number.isInteger(tmdbId)) {
-    console.error("Invalid tmdbId", tmdbId);
-    return null;
-  }
+export type MovieListType = "popular" | "top_rated" | "now_playing" | "upcoming";
 
-  try {
-    const response = await fetch(`${apiUrl}/api/movies/${tmdbId}`);
-
-    const contentType = response.headers.get("content-type") ?? "";
-    const isJson = contentType.includes("application/json");
-    const body = isJson ? await response.json() : null;
-
-    if (!response.ok) {
-      // Backendin virhemuoto: { error, message, details? }
-      const err = body as Partial<ApiErrorResponse> | null;
-
-      console.error("getMovie failed", {
-        status: response.status,
-        error: err?.error,
-        message: err?.message,
-        details: err?.details,
-      });
-
-      // Halutessasi voit branchata error-koodin mukaan:
-      // - VALIDATION_ERROR
-      // - MOVIE_NOT_FOUND
-      // - UPSTREAM_TMDB_ERROR
-      // - UPSTREAM_SCHEMA_MISMATCH
-      // - DB_ERROR
-      return null;
-    }
-
-    // Backend palauttaa MovieResponseDTO:n
-    const data = body as MovieType;
-
-    if (
-      typeof data?.tmdbId !== "number" ||
-      typeof data?.title !== "string" ||
-      !Array.isArray(data?.genres)
-    ) {
-      console.error("Unexpected MovieResponseDTO shape:", data);
-      return null;
-    }
-
-    return {
-      tmdbId: data.tmdbId,
-      title: data.title,
-      overview: data.overview ?? null,
-      posterUrl: data.posterUrl ?? null,
-      backdropUrl: data.backdropUrl ?? null,
-      releaseDate: data.releaseDate ?? null,
-      runtimeMinutes: data.runtimeMinutes ?? null,
-      genres: data.genres ?? [],
-    };
-  } catch (error) {
-    console.error("Fetching movie failed", error);
-    return null;
-  }
-}
-
-
-export type MovieType = {
+export type MovieListItemDTO = {
   tmdbId: number;
   title: string;
   overview: string | null;
   posterUrl: string | null;
   backdropUrl: string | null;
-  releaseDate: string | null;
-  runtimeMinutes: number | null;
-  genres: string[];
+  releaseDate: string | null; // YYYY-MM-DD
+  genreIds: number[];
+  popularity?: number | null;
+  voteAverage?: number | null;
+  voteCount?: number | null;
 };
 
-// --- Uudet tyypit ja funktiot ihmisille --- //
+export type MovieListResponseDTO = {
+  listType: MovieListType;
+  page: number;
+  results: MovieListItemDTO[];
+  totalPages: number;
+  totalResults: number;
+};
+
+/**
+ * Fetch ONE page of a movie list.
+ * Contract: GET /api/movies/lists/{listType}?page=n -> MovieListResponseDTO
+ */
+export async function getMovieListPage(
+  listType: MovieListType,
+  page: number
+): Promise<MovieListResponseDTO | null> {
+  const apiUrl = import.meta.env.VITE_API_URL;
+
+  if (!isValidPositiveInt(page)) {
+    console.error("Invalid page", page);
+    return null;
+  }
+
+  try {
+    const dto = await fetchJson<MovieListResponseDTO>(
+      `${apiUrl}/api/movies/lists/${listType}?page=${page}`
+    );
+
+    // Lightweight runtime sanity checks (avoid silent UI corruption)
+    if (
+      dto.listType !== listType ||
+      !isValidPositiveInt(dto.page) ||
+      !Array.isArray(dto.results) ||
+      !isValidPositiveInt(dto.totalPages) ||
+      dto.totalResults < 0
+    ) {
+      console.error("Invalid MovieListResponseDTO shape", dto);
+      return null;
+    }
+
+    return dto;
+  } catch (err) {
+    if (err instanceof ApiError) {
+      console.error("getMovieListPage failed:", err.status, err.payload ?? err);
+      return null;
+    }
+    console.error("getMovieListPage failed:", err);
+    return null;
+  }
+}
+
+/* =========================
+   Single movie (OpenAPI-aligned DTO)
+   GET /api/movies/{tmdbId} -> MovieResponseDTO
+========================= */
+
+export type MovieResponseDTO = {
+  tmdbId: number;
+  title: string;
+  overview: string | null;
+  posterUrl: string | null;
+  backdropUrl: string | null;
+  releaseDate: string | null; // date
+  runtimeMinutes: number | null;
+  genres: string[]; // required by OpenAPI
+};
+
+export async function getMovie(tmdbId: number): Promise<MovieResponseDTO | null> {
+  const apiUrl = import.meta.env.VITE_API_URL;
+
+  if (!isValidPositiveInt(tmdbId)) {
+    console.error("Invalid tmdbId", tmdbId);
+    return null;
+  }
+
+  try {
+    const data = await fetchJson<MovieResponseDTO>(`${apiUrl}/api/movies/${tmdbId}`);
+
+    // OpenAPI says: required ["tmdbId", "title", "genres"], additionalProperties false
+    if (
+      !isValidPositiveInt(data.tmdbId) ||
+      typeof data.title !== "string" ||
+      !Array.isArray(data.genres)
+    ) {
+      console.error("Invalid MovieResponseDTO shape", data);
+      return null;
+    }
+
+    return data;
+  } catch (err) {
+    if (err instanceof ApiError) {
+      console.error("getMovie failed:", err.status, err.payload ?? err);
+      return null;
+    }
+    console.error("getMovie failed:", err);
+    return null;
+  }
+}
+
+/* =========================
+   Persons - kept
+========================= */
 
 export interface PersonResult {
   id: number;
@@ -288,14 +318,14 @@ export async function getTrendingPeople(): Promise<PersonResult[]> {
     const response = await fetch(`${apiUrl}/api/people/trending`);
 
     if (!response.ok) {
-      console.error('People endpoint failed with status', response.status);
+      console.error("People endpoint failed with status", response.status);
       return [];
     }
 
     const data = (await response.json()) as PeopleListResponse;
 
     if (!Array.isArray(data.results)) {
-      console.error('People response missing results array');
+      console.error("People response missing results array");
       return [];
     }
 
@@ -307,14 +337,12 @@ export async function getTrendingPeople(): Promise<PersonResult[]> {
       popularity: p.popularity,
     }));
   } catch (error) {
-    console.error('Fetching trending people failed', error);
+    console.error("Fetching trending people failed", error);
     return [];
   }
 }
 
-// --- Yksittäisen henkilön haku /api/person/:id --- //
-
-export interface PersonDetails {
+export type PersonDetails = {
   id: number;
   name: string;
   biography?: string;
@@ -323,32 +351,25 @@ export interface PersonDetails {
   place_of_birth?: string | null;
   known_for_department?: string;
   profile_path?: string | null;
-  homepage?: string | null;
-  imdb_id?: string | null;
-  popularity?: number;
-  also_known_as?: string[];
-}
+};
 
 export async function getPerson(personId: number): Promise<PersonDetails | null> {
   const apiUrl = import.meta.env.VITE_API_URL;
 
-  if (!Number.isFinite(personId) || personId <= 0) {
-    console.error("Invalid person id", personId);
+  if (!isValidPositiveInt(personId)) {
+    console.error("Invalid personId", personId);
     return null;
   }
 
   try {
-    const response = await fetch(`${apiUrl}/api/people/${personId}`);
-
-    if (!response.ok) {
-      console.error("Person endpoint failed with status", response.status);
+    const data = await fetchJson<PersonDetails>(`${apiUrl}/api/people/${personId}`);
+    return data;
+  } catch (err) {
+    if (err instanceof ApiError) {
+      console.error("getPerson failed:", err.status, err.payload ?? err);
       return null;
     }
-
-    const data = (await response.json()) as PersonDetails;
-    return data;
-  } catch (error) {
-    console.error("Fetching person failed", error);
+    console.error("getPerson failed:", err);
     return null;
   }
 }

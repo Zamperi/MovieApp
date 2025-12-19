@@ -128,7 +128,81 @@ export const openapi: OpenAPIV3.Document = {
                 },
             },
         },
+        "/api/movies/lists/{listType}": {
+            get: {
+                operationId: "getMovieListByType",
+                summary: "Get a paginated movie list from TMDB (cached)",
+                parameters: [
+                    {
+                        name: "listType",
+                        in: "path",
+                        required: true,
+                        schema: {
+                            type: "string",
+                            enum: ["popular", "top_rated", "now_playing", "upcoming"],
+                        },
+                    },
+                    {
+                        name: "page",
+                        in: "query",
+                        required: false,
+                        schema: {
+                            type: "integer",
+                            minimum: 1,
+                            default: 1,
+                        },
+                    },
+                ],
+                responses: {
+                    "200": {
+                        description: "Movie list fetched successfully",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/MovieListResponseDTO" },
+                            },
+                        },
+                    },
+
+                    "400": {
+                        description: "Invalid listType or page",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                                examples: {
+                                    validationError: {
+                                        value: {
+                                            error: "VALIDATION_ERROR",
+                                            message:
+                                                "listType must be one of: popular, top_rated, now_playing, upcoming; page must be an integer >= 1",
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+
+                    "502": {
+                        description: "Upstream TMDB error or schema mismatch",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                            },
+                        },
+                    },
+
+                    "500": {
+                        description: "Internal database error",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
     },
+
 
     components: {
         schemas: {
@@ -162,6 +236,44 @@ export const openapi: OpenAPIV3.Document = {
                     },
                 },
             },
+            MovieListItemDTO: {
+                type: "object",
+                additionalProperties: false,
+                required: ["tmdbId", "title", "genreIds"],
+                properties: {
+                    tmdbId: { type: "integer" },
+                    title: { type: "string" },
+                    overview: { type: "string", nullable: true },
+                    posterUrl: { type: "string", nullable: true },
+                    backdropUrl: { type: "string", nullable: true },
+                    releaseDate: { type: "string", nullable: true, format: "date" },
+                    genreIds: { type: "array", items: { type: "integer" } },
+                    popularity: { type: "number", nullable: true },
+                    voteAverage: { type: "number", nullable: true },
+                    voteCount: { type: "integer", nullable: true },
+                },
+            },
+
+            MovieListResponseDTO: {
+                type: "object",
+                additionalProperties: false,
+                required: ["listType", "page", "results", "totalPages", "totalResults"],
+                properties: {
+                    listType: {
+                        type: "string",
+                        enum: ["popular", "top_rated", "now_playing", "upcoming"],
+                    },
+                    page: { type: "integer", minimum: 1 },
+                    results: {
+                        type: "array",
+                        items: { $ref: "#/components/schemas/MovieListItemDTO" },
+                    },
+                    totalPages: { type: "integer", minimum: 1 },
+                    totalResults: { type: "integer", minimum: 0 },
+                },
+            },
+
         },
     },
+
 };
