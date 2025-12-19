@@ -26,6 +26,23 @@ model Movie {
   updatedAt       DateTime @updatedAt
 }
 
+enum MovieListType {
+  popular
+  top_rated
+  now_playing
+  upcoming
+}
+
+model MovieListCache {
+  id          Int           @id @default(autoincrement())
+  listType    MovieListType @map("list_type")
+  page        Int
+  payloadJson Json          @map("payload_json")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  @@unique([listType, page])
+  @@map("movie_list_cache")
+}
 
 model User {
   id          Int      @id @default(autoincrement())
