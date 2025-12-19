@@ -1,12 +1,15 @@
-import { useEffect, useState, useMemo } from "react";
+// Movies.tsx
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Box, Container, Typography, Collapse } from "@mui/material";
 import { motion } from "framer-motion";
 import FilterCard from "../components/FilterCard";
 import MovieCard from "../components/MovieCard";
 import MovieCardSkeleton from "../components/MovieCardSkeleton";
-import { getMovies, type MovieResult } from "../services/tmdbService";
-
-type MovieListType = "popular" | "top_rated" | "now_playing" | "upcoming";
+import {
+  getMovieListPage,
+  type MovieListItemDTO,
+  type MovieListType,
+} from "../services/tmdbService";
 
 interface MovieFilters {
   hasPoster?: boolean;
@@ -14,56 +17,143 @@ interface MovieFilters {
 }
 
 const SKELETON_COUNT = 20;
-const IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500";
+
+function mergeUniqueByTmdbId(
+  prev: MovieListItemDTO[],
+  next: MovieListItemDTO[]
+): MovieListItemDTO[] {
+  const map = new Map<number, MovieListItemDTO>();
+  for (const m of prev) map.set(m.tmdbId, m);
+  for (const m of next) map.set(m.tmdbId, m);
+  return Array.from(map.values());
+}
 
 export default function Movies() {
-  const [results, setResults] = useState<MovieResult[]>([]);
+  const [results, setResults] = useState<MovieListItemDTO[]>([]);
   const [listType, setListType] = useState<MovieListType>("popular");
   const [loading, setLoading] = useState<boolean>(true);
+  const [loadingMore, setLoadingMore] = useState<boolean>(false);
+
   const [filtersOpen, setFiltersOpen] = useState<boolean>(false);
   const [filters, setFilters] = useState<MovieFilters>({});
+
+  const [page, setPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+
+  const loadedPagesRef = useRef<Set<number>>(new Set());
+  const inFlightRef = useRef<boolean>(false);
+
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+
+  const hasMore = page < totalPages;
 
   useEffect(() => {
     setFiltersOpen(true);
   }, []);
 
+  // Reset + load page 1 when listType changes
   useEffect(() => {
     let cancelled = false;
 
-    const loadResults = async () => {
+    async function loadFirstPage() {
       setLoading(true);
-      try {
-        const data = await getMovies(listType);
-        if (!cancelled) {
-          setResults(data);
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    };
+      setLoadingMore(false);
+      setResults([]);
 
-    loadResults();
+      setPage(1);
+      setTotalPages(1);
+
+      loadedPagesRef.current = new Set();
+      inFlightRef.current = false;
+
+      const dto = await getMovieListPage(listType, 1);
+      if (cancelled) return;
+
+      if (!dto) {
+        setLoading(false);
+        return;
+      }
+
+      loadedPagesRef.current.add(dto.page);
+      setResults(dto.results);
+      setPage(dto.page);
+      setTotalPages(dto.totalPages);
+      setLoading(false);
+    }
+
+    loadFirstPage();
 
     return () => {
       cancelled = true;
     };
   }, [listType]);
 
+  async function loadNextPage() {
+    if (!hasMore) return;
+    if (loading) return;
+    if (inFlightRef.current) return;
+
+    const nextPage = page + 1;
+    if (loadedPagesRef.current.has(nextPage)) return;
+
+    inFlightRef.current = true;
+    setLoadingMore(true);
+
+    const dto = await getMovieListPage(listType, nextPage);
+
+    if (dto?.results?.length) {
+      loadedPagesRef.current.add(dto.page);
+      setResults((prev) => mergeUniqueByTmdbId(prev, dto.results));
+      setPage(dto.page);
+      setTotalPages(dto.totalPages);
+    }
+
+    setLoadingMore(false);
+    inFlightRef.current = false;
+  }
+
+  // Infinite scroll: observe sentinel at bottom of results
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+
+    observerRef.current?.disconnect();
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (!entry?.isIntersecting) return;
+        void loadNextPage();
+      },
+      {
+        root: null,
+        rootMargin: "600px",
+        threshold: 0.01,
+      }
+    );
+
+    observerRef.current.observe(el);
+
+    return () => {
+      observerRef.current?.disconnect();
+      observerRef.current = null;
+    };
+  }, [page, totalPages, listType, loading]);
+
   const visibleMovies = useMemo(() => {
     let items = [...results];
 
     if (filters.hasPoster) {
-      items = items.filter((m) => Boolean(m.poster_path));
+      items = items.filter((m) => Boolean(m.posterUrl));
     }
 
     if (filters.genres?.length) {
       const selectedGenreIds = filters.genres as number[];
       items = items.filter(
         (m) =>
-          Array.isArray(m.genre_ids) &&
-          m.genre_ids.some((id: number) => selectedGenreIds.includes(id))
+          Array.isArray(m.genreIds) &&
+          m.genreIds.some((id: number) => selectedGenreIds.includes(id))
       );
     }
 
@@ -111,13 +201,8 @@ export default function Movies() {
             width: "100%",
           }}
         >
-          {/* Filters-paneeli */}
-          <Box
-            sx={{
-              flexShrink: 0,
-              width: { xs: "100%", md: "17rem" },
-            }}
-          >
+          {/* Filters */}
+          <Box sx={{ flexShrink: 0, width: { xs: "100%", md: "17rem" } }}>
             <Collapse in={filtersOpen} orientation="vertical" timeout={500}>
               <FilterCard
                 page="movies"
@@ -129,43 +214,40 @@ export default function Movies() {
             </Collapse>
           </Box>
 
-          {/* Tulokset – EI enää MUI Grid, vaan puhdas CSS Grid */}
-          <Box
-            sx={{
-              flexGrow: 1,
-              minWidth: 0,
-            }}
-          >
+          {/* Results */}
+          <Box sx={{ flexGrow: 1, minWidth: 0 }}>
             <Box
               sx={{
                 display: "grid",
                 width: "100%",
                 gridTemplateColumns: {
-                  xs: "repeat(2, minmax(0, 1fr))", // 2 korttia / rivi mobiilissa
+                  xs: "repeat(2, minmax(0, 1fr))",
                   sm: "repeat(3, minmax(0, 1fr))",
                   md: "repeat(4, minmax(0, 1fr))",
                   lg: "repeat(4, minmax(0, 1fr))",
                 },
-                gap: (theme) => ({
-                  xs: theme.spacing(2),
-                  sm: theme.spacing(2.5),
-                  md: theme.spacing(3),
-                }) as any,
+                gap: (theme) =>
+                  ({
+                    xs: theme.spacing(2),
+                    sm: theme.spacing(2.5),
+                    md: theme.spacing(3),
+                  }) as any,
               }}
             >
               {Array.from({
-                length: Math.max(visibleMovies.length || 0, SKELETON_COUNT),
+                length: Math.max(
+                  visibleMovies.length || 0,
+                  loading ? SKELETON_COUNT : 0,
+                  loadingMore ? visibleMovies.length + 8 : visibleMovies.length
+                ),
               }).map((_, index) => {
                 const movie = visibleMovies[index];
-                const isLoaded = !loading && !!movie;
+                const isLoaded = !!movie;
 
                 return (
                   <Box
-                    key={isLoaded ? movie!.id : `skeleton-${index}`}
-                    sx={{
-                      width: "100%",
-                      maxWidth: "100%",
-                    }}
+                    key={isLoaded ? movie.tmdbId : `skeleton-${index}`}
+                    sx={{ width: "100%", maxWidth: "100%" }}
                   >
                     <motion.div
                       style={{ width: "100%" }}
@@ -173,18 +255,14 @@ export default function Movies() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{
                         duration: 0.3,
-                        delay: index * 0.05,
+                        delay: index * 0.02,
                       }}
                     >
                       {isLoaded ? (
                         <MovieCard
-                          tmdbId={movie!.id}
-                          posterUrl={
-                            movie!.poster_path
-                              ? `${IMAGE_BASE_URL}${movie!.poster_path}`
-                              : "/placeholder.jpg"
-                          }
-                          title={movie!.title}
+                          tmdbId={movie.tmdbId}
+                          posterUrl={movie.posterUrl ?? "/placeholder.jpg"}
+                          title={movie.title}
                         />
                       ) : (
                         <MovieCardSkeleton />
@@ -194,6 +272,15 @@ export default function Movies() {
                 );
               })}
             </Box>
+
+            {/* Sentinel */}
+            <Box ref={sentinelRef} sx={{ height: "1px" }} />
+
+            {!loading && !hasMore && results.length > 0 && (
+              <Typography variant="body2" sx={{ mt: "1rem", opacity: 0.7 }}>
+                End of results.
+              </Typography>
+            )}
           </Box>
         </Box>
       </Container>
