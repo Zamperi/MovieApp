@@ -237,13 +237,28 @@ describe("Movie lists routes (spec-aligned)", () => {
   });
 
   it("returns 500 DB_ERROR when database read fails", async () => {
-    vi.spyOn(prisma.movieListCache, "findUnique").mockRejectedValueOnce(
-      new Error("DB is down") as any
-    );
+    const delegate = prisma.movieListCache as any;
 
-    const res = await request(app).get("/api/movies/lists/popular?page=1");
-    expect(res.status).toBe(500);
-    expect(res.body?.error).toBe("DB_ERROR");
-    expect(typeof res.body?.message).toBe("string");
+    // Prisma delegate can be a Proxy; Vitest spyOn may see undefined here in some setups.
+    // Override method for this single test only.
+    const original = delegate.findUnique;
+
+    Object.defineProperty(delegate, "findUnique", {
+      value: vi.fn().mockRejectedValueOnce(new Error("DB is down")),
+      configurable: true,
+    });
+
+    try {
+      const res = await request(app).get("/api/movies/lists/popular?page=1");
+      expect(res.status).toBe(500);
+      expect(res.body?.error).toBe("DB_ERROR");
+      expect(typeof res.body?.message).toBe("string");
+    } finally {
+      Object.defineProperty(delegate, "findUnique", {
+        value: original,
+        configurable: true,
+      });
+    }
   });
+
 });
