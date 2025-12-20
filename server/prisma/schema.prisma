@@ -44,6 +44,36 @@ model MovieListCache {
   @@map("movie_list_cache")
 }
 
+model PeopleCache {
+  tmdbId             Int      @id @map("tmdb_id")
+  name               String
+  biography          String?  @map("biography")
+  profileUrl         String?  @map("profile_url")
+  knownForDepartment String?  @map("known_for_department")
+  birthday           DateTime? @db.Date @map("birthday")
+  deathday           DateTime? @db.Date @map("deathday")
+  placeOfBirth       String?  @map("place_of_birth")
+
+  updatedAt          DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("people_cache")
+}
+
+model TrendingPeopleCache {
+  key          String   @id @map("key") // e.g. "day"
+  page         Int      @map("page")
+  totalPages   Int      @map("total_pages")
+  totalResults Int      @map("total_results")
+
+  // normalized TrendingPersonDTO[] (jsonb)
+  results      Json     @db.JsonB @map("results")
+
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("trending_people_cache")
+}
+
+
 model User {
   id          Int      @id @default(autoincrement())
   username    String

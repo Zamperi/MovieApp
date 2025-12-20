@@ -201,6 +201,161 @@ export const openapi: OpenAPIV3.Document = {
                 },
             },
         },
+        "/api/people/{tmdbPersonId}": {
+            get: {
+                operationId: "getPersonByTmdbPersonId",
+                summary: "Get person by TMDB id",
+                parameters: [
+                    {
+                        name: "tmdbPersonId",
+                        in: "path",
+                        required: true,
+                        schema: { type: "integer", minimum: 1 },
+                    },
+                ],
+                responses: {
+                    "200": {
+                        description: "Person fetched successfully",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/PersonResponseDTO" },
+                            },
+                        },
+                    },
+
+                    "400": {
+                        description: "Invalid TMDB person id",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                                examples: {
+                                    validationError: {
+                                        value: {
+                                            error: "VALIDATION_ERROR",
+                                            message: "tmdbPersonId must be a positive integer",
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+
+                    "404": {
+                        description: "Person not found in TMDB",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                                examples: {
+                                    notFound: {
+                                        value: {
+                                            error: "PERSON_NOT_FOUND",
+                                            message: "Person not found",
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+
+                    "502": {
+                        description: "TMDB upstream error or payload schema mismatch",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                                examples: {
+                                    upstreamTmdbError: {
+                                        value: {
+                                            error: "UPSTREAM_TMDB_ERROR",
+                                            message: "TMDB upstream error",
+                                        },
+                                    },
+                                    upstreamSchemaMismatch: {
+                                        value: {
+                                            error: "UPSTREAM_SCHEMA_MISMATCH",
+                                            message: "TMDB response schema mismatch",
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+
+                    "500": {
+                        description: "Database error",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                                examples: {
+                                    dbError: {
+                                        value: {
+                                            error: "DB_ERROR",
+                                            message: "Database error",
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+
+        "/api/people/trending": {
+            get: {
+                operationId: "getTrendingPeople",
+                summary: "Get trending people (day)",
+                responses: {
+                    "200": {
+                        description: "Trending people fetched successfully",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/TrendingPeopleResponseDTO" },
+                            },
+                        },
+                    },
+
+                    "502": {
+                        description: "TMDB upstream error or payload schema mismatch",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                                examples: {
+                                    upstreamTmdbError: {
+                                        value: {
+                                            error: "UPSTREAM_TMDB_ERROR",
+                                            message: "TMDB upstream error",
+                                        },
+                                    },
+                                    upstreamSchemaMismatch: {
+                                        value: {
+                                            error: "UPSTREAM_SCHEMA_MISMATCH",
+                                            message: "TMDB response schema mismatch",
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+
+                    "500": {
+                        description: "Database error",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                                examples: {
+                                    dbError: {
+                                        value: {
+                                            error: "DB_ERROR",
+                                            message: "Database error",
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
     },
 
 
@@ -272,7 +427,49 @@ export const openapi: OpenAPIV3.Document = {
                     totalResults: { type: "integer", minimum: 0 },
                 },
             },
+            PersonResponseDTO: {
+                type: "object",
+                additionalProperties: false,
+                required: ["tmdbPersonId", "name"],
+                properties: {
+                    tmdbPersonId: { type: "integer", minimum: 1 },
+                    name: { type: "string" },
+                    biography: { type: "string", nullable: true },
+                    profileUrl: { type: "string", nullable: true },
+                    knownForDepartment: { type: "string", nullable: true },
+                    birthday: { type: "string", nullable: true },      // YYYY-MM-DD
+                    deathday: { type: "string", nullable: true },      // YYYY-MM-DD
+                    placeOfBirth: { type: "string", nullable: true },
+                },
+            },
 
+            TrendingPersonDTO: {
+                type: "object",
+                additionalProperties: false,
+                required: ["tmdbPersonId", "name"],
+                properties: {
+                    tmdbPersonId: { type: "integer", minimum: 1 },
+                    name: { type: "string" },
+                    profileUrl: { type: "string", nullable: true },
+                    knownForDepartment: { type: "string", nullable: true },
+                    popularity: { type: "number", nullable: true },
+                },
+            },
+
+            TrendingPeopleResponseDTO: {
+                type: "object",
+                additionalProperties: false,
+                required: ["page", "results", "totalPages", "totalResults"],
+                properties: {
+                    page: { type: "integer", minimum: 1 },
+                    results: {
+                        type: "array",
+                        items: { $ref: "#/components/schemas/TrendingPersonDTO" },
+                    },
+                    totalPages: { type: "integer", minimum: 1 },
+                    totalResults: { type: "integer", minimum: 0 },
+                },
+            },
         },
     },
 
