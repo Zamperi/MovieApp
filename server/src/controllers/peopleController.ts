@@ -1,25 +1,53 @@
-import { Request, Response } from 'express';
-import { people } from '../services/people.service';
+import type { Request, Response } from "express";
+import { people } from "../services/people.service";
+
+type ErrorResponse = {
+    status: number;
+    error: string;
+    message: string;
+    details?: unknown;
+};
+
+function isErrorResponse(x: unknown): x is ErrorResponse {
+    if (!x || typeof x !== "object") return false;
+    const o = x as Record<string, unknown>;
+    return (
+        typeof o.status === "number" &&
+        typeof o.error === "string" &&
+        typeof o.message === "string"
+    );
+}
 
 export const peopleController = {
     trending: async (_req: Request, res: Response) => {
         try {
-            const response = await people.trending();
-            return res.status(200).json(response);
-        } catch (error) {
-            return res.status(500).json('Error while fetching trending people');
+            const dto = await people.getTrendingPeopleDay();
+            return res.status(200).json(dto);
+        } catch (err) {
+            if (isErrorResponse(err)) {
+                return res.status(err.status).json(err);
+            }
+            return res.status(500).json({
+                status: 500,
+                error: "INTERNAL_ERROR",
+                message: "Unexpected error",
+            });
         }
     },
 
-    getPerson: async(req: Request, res: Response) => {
+    getPerson: async (req: Request, res: Response) => {
         try {
-            const id = Number(req.params.id);
-            if(!id) return res.status(400).json({ error: 'Invalid id' });
-
-            const response = await people.getPerson(id);
-            return res.status(200).json(response);
-        } catch (error) {
-            return res.status(500).json('Error while fetching person');
+            const dto = await people.getPersonByTmdbId(req.params.tmdbPersonId);
+            return res.status(200).json(dto);
+        } catch (err) {
+            if (isErrorResponse(err)) {
+                return res.status(err.status).json(err);
+            }
+            return res.status(500).json({
+                status: 500,
+                error: "INTERNAL_ERROR",
+                message: "Unexpected error",
+            });
         }
-    }
-}
+    },
+};
