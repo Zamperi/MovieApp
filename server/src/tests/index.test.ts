@@ -3,8 +3,8 @@ import { afterAll, it, expect } from 'vitest';
 import { prisma } from '../lib/prisma';
 import app from '../index';  // nyt löytyy
 
-it('GET /health', async () => {
-  const res = await request(app).get('/health');
+it('GET /api/health', async () => {
+  const res = await request(app).get('/api/health');
   expect(res.status).toBe(200);
   expect(res.body.ok).toBe(true);
 });

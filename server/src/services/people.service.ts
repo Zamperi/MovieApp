@@ -71,8 +71,14 @@ function normalizePersonToDto(row: {
 export const people = {
   /** GET /api/people/{tmdbPersonId} */
   async getPersonByTmdbId(tmdbPersonIdRaw: unknown) {
+
     // 1) Input boundary validate
-    const { tmdbPersonId } = PersonIdParamSchema.parse({ tmdbPersonId: tmdbPersonIdRaw });
+    const parsed = PersonIdParamSchema.safeParse({ tmdbPersonId: tmdbPersonIdRaw });
+    if (!parsed.success) {
+      throw appError(400, "VALIDATION_ERROR", "Invalid tmdbPersonId", parsed.error.flatten());
+    }
+    const { tmdbPersonId } = parsed.data;
+
 
     // 2) Cache lookup
     try {
