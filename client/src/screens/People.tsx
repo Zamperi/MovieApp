@@ -109,7 +109,7 @@ export default function People() {
 
                 return (
                   <Box
-                    key={isLoaded ? person!.id : `skeleton-${index}`}
+                    key={isLoaded ? person!.tmdbPersonId : `skeleton-${index}`}
                     sx={{
                       width: "100%",
                       maxWidth: "100%",
@@ -126,11 +126,11 @@ export default function People() {
                     >
                       {isLoaded ? (
                         <PeopleCard
-                          id={person!.id}
+                          id={person!.tmdbPersonId}
                           name={person!.name}
                           profileUrl={
-                            person!.profile_path
-                              ? `${IMAGE_BASE_URL}${person!.profile_path}`
+                            person!.profileUrl
+                              ? `${person!.profileUrl}`
                               : "/placeholder.jpg"
                           }
                         />

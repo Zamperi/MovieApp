@@ -38,7 +38,7 @@ export default function PeopleCard({ id, name, profileUrl }: Props) {
                 sx={{
                     position: "relative",
                     width: "100%",
-                    aspectRatio: "2 / 3", // pysyy siistinä gridissä
+                    aspectRatio: "2 / 3",
                     overflow: "hidden",
                 }}
             >
@@ -47,7 +47,7 @@ export default function PeopleCard({ id, name, profileUrl }: Props) {
                     image={
                         profileUrl
                             ? profileUrl
-                            : "/placeholder-person.jpg" // voit vaihtaa projektin placeholderiin
+                            : "/placeholder-person.jpg"
                     }
                     alt={name}
                     sx={{

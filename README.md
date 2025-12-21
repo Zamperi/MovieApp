@@ -1,14 +1,14 @@
 # MovieApp
-This project is under development.
+This project is under development.<br>
 Learning project – Fullstack
 Link to application: *upcoming"
 
-Web application for movie enthusiasts. 
-Users can browse movies, write reviews, join groups, search showtimes and add favorites.
+Web application for movie enthusiasts.<br>
+Users can browse movies, write reviews, join groups, search showtimes and add favorites.<br>
 Utilisizes The Movie Database (TMDB).
 
 ### Goal of the project
-To develop my thinking skills with hands on learning.
+To develop my thinking and coding skills with hands on learning.<br>
 Project utilizes TypeScript, Vitest, Zod and Mermaid documentation.
 
 ## Documentation

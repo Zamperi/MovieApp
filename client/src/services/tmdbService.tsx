@@ -214,6 +214,7 @@ export async function getMovieListPage(
     const dto = await fetchJson<MovieListResponseDTO>(
       `${apiUrl}/api/movies/lists/${listType}?page=${page}`
     );
+    
 
     // Lightweight runtime sanity checks (avoid silent UI corruption)
     if (
@@ -291,20 +292,20 @@ export async function getMovie(tmdbId: number): Promise<MovieResponseDTO | null>
 ========================= */
 
 export interface PersonResult {
-  id: number;
+  tmdbPersonId: number;
   name: string;
-  profile_path?: string | null;
-  known_for_department?: string;
+  profileUrl?: string | null;
+  knownForDepartment?: string;
   popularity?: number;
 }
 
 type PeopleListResponse = {
   page: number;
   results: Array<{
-    id: number;
+    tmdbPersonId: number;
     name: string;
-    profile_path?: string | null;
-    known_for_department?: string;
+    profileUrl?: string | null;
+    knownForDepartment?: string;
     popularity?: number;
   }>;
   total_pages: number;
@@ -330,10 +331,10 @@ export async function getTrendingPeople(): Promise<PersonResult[]> {
     }
 
     return data.results.map((p) => ({
-      id: p.id,
+      tmdbPersonId: p.tmdbPersonId,
       name: p.name,
-      profile_path: p.profile_path ?? null,
-      known_for_department: p.known_for_department,
+      profileUrl: p.profileUrl ?? null,
+      known_for_department: p.knownForDepartment,
       popularity: p.popularity,
     }));
   } catch (error) {
@@ -348,9 +349,9 @@ export type PersonDetails = {
   biography?: string;
   birthday?: string | null;
   deathday?: string | null;
-  place_of_birth?: string | null;
-  known_for_department?: string;
-  profile_path?: string | null;
+  placeOfBirth?: string | null;
+  knownForDepartment?: string;
+  profileUrl?: string | null;
 };
 
 export async function getPerson(personId: number): Promise<PersonDetails | null> {
