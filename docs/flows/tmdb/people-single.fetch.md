@@ -46,10 +46,12 @@ Returns:
 
 ### Error (non-2xx)
 Returns a consistent error envelope:
+```ts
 - status: number
 - error: string
 - message: string
 - details?: unknown
+```
 
 Recommended error mapping:
 - 400 VALIDATION_ERROR
@@ -61,9 +63,12 @@ Recommended error mapping:
 ## Data objects
 
 ### PersonIdParam
+```ts
 - tmdbPersonId: number (int, >0)
+```
 
 ### TmdbPersonRaw (external)
+```ts
 Minimum fields to validate and use:
 - id: number
 - name: string
@@ -73,8 +78,10 @@ Minimum fields to validate and use:
 - birthday: string | null            (YYYY-MM-DD)
 - deathday: string | null            (YYYY-MM-DD)
 - place_of_birth: string | null
+```
 
 ### PeopleCacheRow (DB)
+```ts
 - tmdb_id: number (PK)
 - name: string
 - biography: string | null
@@ -84,8 +91,10 @@ Minimum fields to validate and use:
 - deathday: date | null
 - place_of_birth: string | null
 - updated_at: timestamp
+```
 
 ### PersonResponseDTO
+```ts
 - tmdbPersonId: number
 - name: string
 - biography: string | null
@@ -94,6 +103,7 @@ Minimum fields to validate and use:
 - birthday: string | null
 - deathday: string | null
 - placeOfBirth: string | null
+```
 
 ## Data transformations (raw → normalized → DTO)
 
@@ -106,6 +116,7 @@ Where `TMDB_IMAGE_BASE` is an env-configurable base like:
 - `https://image.tmdb.org/t/p/w500`
 
 ### Field mapping
+```ts
 From `TmdbPersonRaw` to `PeopleCacheRow`:
 - tmdb_id                ← id
 - name                   ← name
@@ -126,3 +137,4 @@ From `PeopleCacheRow` to `PersonResponseDTO`:
 - birthday               ← birthday (date → YYYY-MM-DD) or null
 - deathday               ← deathday (date → YYYY-MM-DD) or null
 - placeOfBirth           ← place_of_birth
+```

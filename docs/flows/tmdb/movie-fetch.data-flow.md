@@ -39,9 +39,12 @@ If it exists but is older than the TTL, it is treated as stale and refreshed fro
 ## Data objects
 
 ### MovieIdParam
+```ts
 - tmdbId: number (int, >0)
+```
 
 ### TmdbMovieRaw (external)
+```ts
 - id: number
 - title: string
 - overview: string | null
@@ -50,8 +53,10 @@ If it exists but is older than the TTL, it is treated as stale and refreshed fro
 - release_date: string | null   (YYYY-MM-DD)
 - runtime: number | null
 - genres: Array<{ id: number; name: string }>
+```
 
 ### MovieCacheRow (DB)
+```ts
 - tmdb_id: number (PK)
 - title: string
 - overview: string | null
@@ -61,8 +66,10 @@ If it exists but is older than the TTL, it is treated as stale and refreshed fro
 - runtime_minutes: number | null
 - genres: string[]          (flattened)
 - updated_at: timestamp
+```
 
 ### MovieResponseDTO
+```ts
 - tmdbId: number
 - title: string
 - overview: string | null
@@ -71,3 +78,4 @@ If it exists but is older than the TTL, it is treated as stale and refreshed fro
 - releaseDate: string | null
 - runtimeMinutes: number | null
 - genres: string[]
+```

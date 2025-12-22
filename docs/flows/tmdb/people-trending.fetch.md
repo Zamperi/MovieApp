@@ -55,40 +55,49 @@ Recommended error mapping:
 ## Data objects
 
 ### TmdbTrendingPeopleRaw (external)
+```ts
 - page: number
 - results: TmdbTrendingPersonItemRaw[]
 - total_pages: number
 - total_results: number
+```
 
 ### TmdbTrendingPersonItemRaw (external)
+```ts
 Minimum fields to validate and use:
 - id: number
 - name: string
 - profile_path: string | null
 - known_for_department: string | null
 - popularity: number | null
+```
 
 ### TrendingPeopleCacheRow (DB)
+```ts
 - key: string (PK)         // e.g. "day"
 - page: number
 - total_pages: number
 - total_results: number
 - results: jsonb           // normalized TrendingPersonDTO[]
 - updated_at: timestamp
+```
 
 ### TrendingPersonDTO
+```ts
 - tmdbPersonId: number
 - name: string
 - profileUrl: string | null
 - knownForDepartment: string | null
 - popularity: number | null
+```
 
 ### TrendingPeopleResponseDTO
+```ts
 - page: number
 - results: TrendingPersonDTO[]
 - totalPages: number
 - totalResults: number
-
+```
 ## Data transformations (raw → normalized → DTO)
 
 ### TMDB image path → absolute URL
@@ -99,6 +108,7 @@ Where `TMDB_IMAGE_BASE` is an env-configurable base like:
 - `https://image.tmdb.org/t/p/w500`
 
 ### Field mapping
+```ts
 From `TmdbTrendingPeopleRaw` to `TrendingPeopleCacheRow`:
 - key           ← "day"
 - page          ← page
@@ -119,3 +129,4 @@ From `TrendingPeopleCacheRow` to `TrendingPeopleResponseDTO`:
 - totalPages   ← total_pages
 - totalResults ← total_results
 - results      ← results
+```

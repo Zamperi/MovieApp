@@ -92,17 +92,17 @@ model User {
 }
 
 model Group {
-  id        Int      @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   name      String
-
-  // Omistaja (yksi user)
   ownerId   Int
-  owner     User     @relation("GroupOwner", fields: [ownerId], references: [id])
+  owner     User      @relation("GroupOwner", fields: [ownerId], references: [id])
 
-  // Jäsenet (moni user)
-  members   User[]   @relation("GroupMembers")
+  members   User[]    @relation("GroupMembers")
 
-  createdAt DateTime @default(now())
+  public    Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 }
 
 model RefreshToken {

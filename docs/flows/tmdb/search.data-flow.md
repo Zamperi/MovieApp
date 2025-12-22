@@ -43,14 +43,17 @@ sequenceDiagram
 
 ### PowerSyntax (inside `q`)
 Tokens inside the same `q` string with format `key:value` are interpreted as search modifiers.
+```ts
 - lang: string (e.g. `fi-FI`)
 - adult: boolean string (`true` | `false`)
 - genre: string (genre name resolved via TMDB genre list)
 - actor: string
 - director: string
 - keyword: string
+```
 
 ### ParsedQuery
+```ts
 - raw: string                  (trimmed original q)
 - tokens: string[]             (q split on whitespace, excluding key:value tokens)
 - power: Record<string,string> (all key:value tokens, lowercased keys)
@@ -60,8 +63,10 @@ Tokens inside the same `q` string with format `key:value` are interpreted as sea
     - range like `1999-2005`
 - lang: string | undefined      (from power.lang)
 - adult: boolean | undefined    (from power.adult)
+```
 
 ### Intent
+```ts
 One query can produce multiple intents (max 4). Each intent maps to one upstream TMDB call.
 - { kind: "genre", genreId: number }
 - { kind: "person", name: string, role?: "actor" | "director" }
@@ -69,8 +74,10 @@ One query can produce multiple intents (max 4). Each intent maps to one upstream
 - { kind: "collection", name: string }   (candidate intent)
 - { kind: "title", title: string, year?: Year }
 - { kind: "multi", query: string, year?: Year }
+```
 
 ### SearchResponseDTO
+```ts
 - query: string                (echo of ParsedQuery.raw)
 - intents: string[]             (intent kinds, e.g. ["title","multi"])
 - count: number                 (results.length)
@@ -79,9 +86,11 @@ One query can produce multiple intents (max 4). Each intent maps to one upstream
   - years: string[]             (unique YYYY from results' `release_date`, max 12)
   - mediaTypes: string[]        (unique `media_type` values; default "movie" if missing)
 - results: TmdbResult[]         (merged + ranked; payload is largely TMDB-shaped)
+```
 
 ### TmdbResult (minimum relied-upon fields)
 The API does not validate/normalize TMDB payloads for this endpoint. Ranking/faceting relies on these fields when present:
+```ts
 - id: number
 - media_type?: "movie" | "tv" | "person" | string
 - title?: string                (movies)
@@ -89,3 +98,4 @@ The API does not validate/normalize TMDB payloads for this endpoint. Ranking/fac
 - popularity?: number
 - genre_ids?: number[]
 - release_date?: string         (YYYY-MM-DD)
+```

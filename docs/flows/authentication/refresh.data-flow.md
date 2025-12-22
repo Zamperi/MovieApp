@@ -14,11 +14,17 @@ sequenceDiagram
 
 ### Data Objects
 #### RefreshRequest
+```ts
  - refreshToken: string (via httpOnly cookie)
+```
 
 ##### RefreshResponse (200)
+```ts
  - ok: boolean
+```
 
 #### Auth cookies (Set-Cookie)
+```ts
  - accessToken: httpOnly cookie
  - refreshToken: httpOnly cookie (rotated)
+```
