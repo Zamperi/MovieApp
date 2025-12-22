@@ -15,8 +15,10 @@ sequenceDiagram
 
 ### Data object
 #### refreshToken
+```ts
  - type: opaque string / JWT
  - storage: httpOnly cookie
  - purpose: access token renewal
  - lifetime: long (days / weeks)
  - server-side state: stored & revocable
+```

@@ -14,9 +14,13 @@ sequenceDiagram
 
 ### Data Objects
 #### RegisterRequest (req.body)
+```ts
  - email: string
  - password: string
+```
 
 #### RegisterResponse (201)
+```ts
  - id: number
  - email: string
+```

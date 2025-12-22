@@ -30,10 +30,13 @@ sequenceDiagram
 ## Data objects
 
 ### UI Login (req.body)
+```ts
  - email string
  - password string
+```
 
 ### User (DB record)
+```ts
   - id    integer
   - username    string
   - email       string
@@ -43,8 +46,10 @@ sequenceDiagram
   - groups      Group[]
   - refreshTokens RefreshToken[]
   - passwordHash   string
+```
 
 ### Login response (JSON)
+```ts
   - id    integer
   - username    string
   - email       string
@@ -54,24 +59,31 @@ sequenceDiagram
   - groups      Group[]
   - refreshTokens RefreshToken[]
   - passwordHash   string
+```
 
 ### Auth cookies (Set-Cookie)
 #### accessToken
+```ts
  - type: opaque string / JWT
  - storage: httpOnly cookie
  - purpose: authenticated API requests
  - lifetime: short (minutes)
+```
 
 #### refreshToken
+```ts
  - type: opaque string / JWT
  - storage: httpOnly cookie
  - purpose: access token renewal
  - lifetime: long (days / weeks)
  - server-side state: stored & revocable
+```
 
 ### RefreshToken (DB record)
+```ts
  - id: string | number
  - userId: number
  - revoked: boolean
  - createdAt: timestamp
  - expiresAt: timestamp 
+```
