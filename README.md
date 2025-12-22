@@ -1,14 +1,14 @@
-# MovieApp
-This project is under development.
+## MovieApp
+This project is under development.<br>
 Learning project – Fullstack
 Link to application: *upcoming"
 
-Web application for movie enthusiasts. 
-Users can browse movies, write reviews, join groups, search showtimes and add favorites.
+Web application for movie enthusiasts.<br>
+Users can browse movies, write reviews, join groups, search showtimes and add favorites.<br>
 Utilisizes The Movie Database (TMDB).
 
 ### Goal of the project
-To develop my thinking skills with hands on learning.
+To develop my thinking and coding skills with hands on learning.<br>
 Project utilizes TypeScript, Vitest, Zod and Mermaid documentation.
 
 ## Documentation
@@ -31,6 +31,8 @@ Project utilizes TypeScript, Vitest, Zod and Mermaid documentation.
 - [Refresh Token Error Flow](docs/flows/authentication/register.error-flow.md)
 
 #### The Movie Database
+- [Seach Data Flow](docs/flows/tmdb/search.data-flow.md)
+- [Search Error Flow](docs/flows/tmdb/search.error-flow.md)
 - [Single Movie Fetch Data Flow](docs/flows/tmdb/movie-fetch.data-flow.md)
 - [Single Movie Error Flow](docs/flows/tmdb/movie-fetch.error-flow.md)
 - [Movie Lists Data Flow](docs/flows/tmdb/movie-lists.data-flow.md)
@@ -39,6 +41,8 @@ Project utilizes TypeScript, Vitest, Zod and Mermaid documentation.
 - [People Error Flow](docs/flows/tmdb/people-single.fetch-errors.md)
 - [Trending People Data Flow](docs/flows/tmdb/people-trending.fetch.md)
 - [Trending People Error Flow](docs/flows/tmdb/people-trending.fetch-errors.md)
+
+#### Database (PostgreSQL) data flows
 
 
 ### API documentation

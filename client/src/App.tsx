@@ -41,6 +41,15 @@ export default function App() {
                 </PageLayout>
               } />
 
+              <Route
+                path="/search"
+                element={
+                  <PageLayout>
+                    <SearchResults />
+                  </PageLayout>
+                }
+              />
+
               <Route path="/movies" element={
                 <PageLayout>
                   <Movies />
@@ -98,11 +107,11 @@ export default function App() {
               } />
 
               {/* Not found page */}
-                <Route path="*" element={
-                  <PageLayout>
-                    <NotFoundPage></NotFoundPage>
-                  </PageLayout>
-                } />
+              <Route path="*" element={
+                <PageLayout>
+                  <NotFoundPage></NotFoundPage>
+                </PageLayout>
+              } />
 
             </Routes>
           </Box>

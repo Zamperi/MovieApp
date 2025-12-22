@@ -117,7 +117,7 @@ async function fetchSearch(query: string): Promise<TmdbSearchResponse | null> {
 
   try {
     const data = await fetchJson<TmdbSearchResponse>(
-      `${apiUrl}/api/search?query=${encodeURIComponent(q)}`
+      `${apiUrl}/api/search?q=${encodeURIComponent(q)}`
     );
 
     if (!Array.isArray(data.results)) return null;
@@ -215,6 +215,7 @@ export async function getMovieListPage(
       `${apiUrl}/api/movies/lists/${listType}?page=${page}`
     );
 
+
     // Lightweight runtime sanity checks (avoid silent UI corruption)
     if (
       dto.listType !== listType ||
@@ -291,20 +292,20 @@ export async function getMovie(tmdbId: number): Promise<MovieResponseDTO | null>
 ========================= */
 
 export interface PersonResult {
-  id: number;
+  tmdbPersonId: number;
   name: string;
-  profile_path?: string | null;
-  known_for_department?: string;
+  profileUrl?: string | null;
+  knownForDepartment?: string;
   popularity?: number;
 }
 
 type PeopleListResponse = {
   page: number;
   results: Array<{
-    id: number;
+    tmdbPersonId: number;
     name: string;
-    profile_path?: string | null;
-    known_for_department?: string;
+    profileUrl?: string | null;
+    knownForDepartment?: string;
     popularity?: number;
   }>;
   total_pages: number;
@@ -330,10 +331,10 @@ export async function getTrendingPeople(): Promise<PersonResult[]> {
     }
 
     return data.results.map((p) => ({
-      id: p.id,
+      tmdbPersonId: p.tmdbPersonId,
       name: p.name,
-      profile_path: p.profile_path ?? null,
-      known_for_department: p.known_for_department,
+      profileUrl: p.profileUrl ?? null,
+      known_for_department: p.knownForDepartment,
       popularity: p.popularity,
     }));
   } catch (error) {
@@ -343,14 +344,18 @@ export async function getTrendingPeople(): Promise<PersonResult[]> {
 }
 
 export type PersonDetails = {
-  id: number;
+  tmdbPersonId: number;
   name: string;
-  biography?: string;
-  birthday?: string | null;
-  deathday?: string | null;
-  place_of_birth?: string | null;
-  known_for_department?: string;
-  profile_path?: string | null;
+  biography: string | null;
+  birthday: string | null;
+  deathday: string | null;
+  placeOfBirth: string | null;
+  knownForDepartment: string | null;
+  profileUrl: string | null;
+  alsoKnownAs: string[] | null;
+  imdbId: string | null;
+  homepage: string | null;
+  popularity: number;
 };
 
 export async function getPerson(personId: number): Promise<PersonDetails | null> {

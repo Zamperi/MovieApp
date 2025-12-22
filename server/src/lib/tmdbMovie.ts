@@ -31,13 +31,32 @@ function buildAuthHeaders(): Record<string, string> {
 }
 
 export async function fetchTmdbMovieRawById(tmdbId: number): Promise<TmdbMovieRaw> {
-  const url = `${TMDB_BASE_URL}/movie/${tmdbId}`;
+  const bearer = process.env.TMDB_BEARER_TOKEN;
+  const apiKey = process.env.TMDB_API_KEY;
+
+  // Build URL
+  const baseUrl = process.env.TMDB_BASE_URL ?? "https://api.themoviedb.org/3";
+  const rawUrl = `${baseUrl}/movie/${tmdbId}`;
+
+  // Use Bearer token if present, otherwise fall back to v3 api_key query param
+  const url = (() => {
+    if (bearer) return rawUrl;
+    if (!apiKey) return rawUrl;
+    const u = new URL(rawUrl);
+    if (!u.searchParams.has("api_key")) u.searchParams.set("api_key", apiKey);
+    return u.toString();
+  })();
+
+  // Headers: only set Authorization when we actually have a Bearer token
+  const headers: Record<string, string> = { accept: "application/json" };
+  if (bearer) headers.authorization = `Bearer ${bearer}`;
 
   let res: Response;
   try {
-    res = await fetch(url, { headers: buildAuthHeaders() });
+    res = await fetch(url, { headers });
   } catch (err: any) {
     throw appError(502, "UPSTREAM_NETWORK_ERROR", "TMDB request failed", {
+      tmdbId,
       cause: String(err?.message ?? err),
     });
   }

@@ -238,3 +238,11 @@ describe("People routes (spec-aligned)", () => {
     expect(storedResults[0].tmdbPersonId).toBe(777);
   });
 });
+
+afterAll(async () => {
+  // Final cleanup so tests don't pollute dev DB
+  await prisma.peopleCache.deleteMany();
+  await prisma.trendingPeopleCache.deleteMany();
+
+  await prisma.$disconnect();
+});
