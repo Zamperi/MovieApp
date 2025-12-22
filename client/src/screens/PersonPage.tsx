@@ -29,9 +29,9 @@ export default function PersonPage() {
     return <div>Loading...</div>;
   }
 
-  const backgroundPath = person.profile_path ?? null;
-  const profileUrl = person.profile_path
-    ? `${profileImageBaseUrl}${person.profile_path}`
+  const backgroundPath = person.profileUrl ?? null;
+  const profileUrl = person.profileUrl
+    ? `${profileImageBaseUrl}${person.profileUrl}`
     : "/placeholder-person.jpg";
 
   const lifeSpan =
@@ -42,9 +42,9 @@ export default function PersonPage() {
       : undefined;
 
   const subtitleParts = [
-    person.known_for_department,
+    person.knownForDepartment,
     lifeSpan,
-    person.place_of_birth,
+    person.placeOfBirth,
   ].filter(Boolean);
 
   return (
@@ -117,14 +117,14 @@ export default function PersonPage() {
               </Typography>
             )}
 
-            {person.also_known_as && person.also_known_as.length > 0 && (
+            {person.alsoKnownAs && person.alsoKnownAs.length > 0 && (
               <Stack
                 direction="row"
                 spacing={1}
                 flexWrap="wrap"
                 sx={{ mt: 1, mb: 1, gap: 0.5 }}
               >
-                {person.also_known_as.map((alias) => (
+                {person.alsoKnownAs.map((alias) => (
                   <Chip
                     key={alias}
                     label={alias}
@@ -147,7 +147,7 @@ export default function PersonPage() {
                 : "No biography available for this person."}
             </Typography>
 
-            {(person.homepage || person.imdb_id) && (
+            {(person.homepage || person.imdbId) && (
               <Box sx={{ mt: "1.5rem" }}>
                 <Typography variant="h6" sx={{ mb: 0.5 }}>
                   Links
@@ -164,9 +164,9 @@ export default function PersonPage() {
                       Official homepage
                     </MuiLink>
                   )}
-                  {person.imdb_id && (
+                  {person.imdbId && (
                     <MuiLink
-                      href={`https://www.imdb.com/name/${person.imdb_id}`}
+                      href={`https://www.imdb.com/name/${person.imdbId}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       underline="hover"

@@ -117,7 +117,7 @@ async function fetchSearch(query: string): Promise<TmdbSearchResponse | null> {
 
   try {
     const data = await fetchJson<TmdbSearchResponse>(
-      `${apiUrl}/api/search?query=${encodeURIComponent(q)}`
+      `${apiUrl}/api/search?q=${encodeURIComponent(q)}`
     );
 
     if (!Array.isArray(data.results)) return null;
@@ -214,7 +214,7 @@ export async function getMovieListPage(
     const dto = await fetchJson<MovieListResponseDTO>(
       `${apiUrl}/api/movies/lists/${listType}?page=${page}`
     );
-    
+
 
     // Lightweight runtime sanity checks (avoid silent UI corruption)
     if (
@@ -344,14 +344,18 @@ export async function getTrendingPeople(): Promise<PersonResult[]> {
 }
 
 export type PersonDetails = {
-  id: number;
+  tmdbPersonId: number;
   name: string;
-  biography?: string;
-  birthday?: string | null;
-  deathday?: string | null;
-  placeOfBirth?: string | null;
-  knownForDepartment?: string;
-  profileUrl?: string | null;
+  biography: string | null;
+  birthday: string | null;
+  deathday: string | null;
+  placeOfBirth: string | null;
+  knownForDepartment: string | null;
+  profileUrl: string | null;
+  alsoKnownAs: string[] | null;
+  imdbId: string | null;
+  homepage: string | null;
+  popularity: number;
 };
 
 export async function getPerson(personId: number): Promise<PersonDetails | null> {
