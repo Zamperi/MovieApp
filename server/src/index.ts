@@ -2,6 +2,9 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import pinoHttp from "pino-http";
+import { logger } from "./lib/logger";
+
 import moviesRouter from './routes/movies.routes';
 import usersRouter from './routes/users.routes';
 import searchRouter from './routes/search.routes';
@@ -19,6 +22,11 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(cookieParser());
+app.use(
+  pinoHttp({
+    logger,
+  })
+);
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 
