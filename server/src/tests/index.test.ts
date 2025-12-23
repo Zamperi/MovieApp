@@ -1,7 +1,7 @@
 import request from 'supertest';
 import { afterAll, it, expect } from 'vitest';
 import { prisma } from '../lib/prisma';
-import app from '../index';  // nyt löytyy
+import app from '../index';
 
 it('GET /api/health', async () => {
   const res = await request(app).get('/api/health');

@@ -19,12 +19,13 @@ API -->> UI: 200 OK<br>Groups Response DTO
 - id: integer
 - name: string
 - ownerId: integer
-- members: integer[]
 - public: boolean
-- createdAt: timestamp
-- updatedAt: timestamp
-- deletedAt: timestamp | null
+- createdAt: DateTime
+- updatedAt: DateTime
+- deletedAt: DateTime | null
 ```
+
+
 
 #### GroupsResponseDTO
 ```ts

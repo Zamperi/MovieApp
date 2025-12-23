@@ -356,6 +356,60 @@ export const openapi: OpenAPIV3.Document = {
                 },
             },
         },
+
+        // --------------------------------------
+        // Groups
+        // --------------------------------------
+
+        "/api/groups/all": {
+            get: {
+                operationId: "getAllGroups",
+                summary: "Get all groups",
+                responses: {
+                    "200": {
+                        description: "Public groups fetched succesfully",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/GroupsResponseDTO" },
+                            }
+                        },
+                    },
+                    "500": {
+                        description: "Database error",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/componenents/schemas/ErrorResponse" },
+                                examples: {
+                                    dbError: {
+                                        value: {
+                                            error: "DB_ERROR",
+                                            message: "Database error",
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                },
+            },
+        },
+        "/api/groups/{groupId}": {
+            get: {
+                operationId: "GetSingleGroup",
+                summary: "Get singke group",
+                responses: {
+                    "200": {
+                        description: "A group fetched succesfully",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/GroupResponseDTO" }
+                            }
+                        }
+                    },
+                },
+            },
+        },
+
     },
 
 
@@ -377,20 +431,6 @@ export const openapi: OpenAPIV3.Document = {
                 },
             },
 
-            ErrorResponse: {
-                type: "object",
-                additionalProperties: false,
-                required: ["error", "message"],
-                properties: {
-                    error: { type: "string" },
-                    message: { type: "string" },
-                    details: {
-                        type: "object",
-                        nullable: true,
-                        additionalProperties: true,
-                    },
-                },
-            },
             MovieListItemDTO: {
                 type: "object",
                 additionalProperties: false,
@@ -427,6 +467,11 @@ export const openapi: OpenAPIV3.Document = {
                     totalResults: { type: "integer", minimum: 0 },
                 },
             },
+
+            // ------------------------------------------
+            // People
+            // ------------------------------------------
+
             PersonResponseDTO: {
                 type: "object",
                 additionalProperties: false,
@@ -470,6 +515,68 @@ export const openapi: OpenAPIV3.Document = {
                     totalResults: { type: "integer", minimum: 0 },
                 },
             },
+
+            //-----------------------------------
+            //Groups
+            //-----------------------------------
+
+            GroupListItemDTO: {
+                type: "object",
+                additionalProperties: false,
+                required: ["groupId", "groupName"],
+                properties: {
+                    groupId: { type: "integer", minimum: 1 },
+                    groupName: { type: "string" }
+                }
+            },
+            GroupsResponseDTO: {
+                type: "array",
+                items: {
+                    $ref: "#/components/schemas/GroupListItemDTO"
+                }
+            },
+            GroupResponseDTO: {
+                type: "object",
+                additionalProperties: false,
+                required: ["groupId", "groupName", "public", "members", "createdAt"],
+                properties: {
+                    groupId: { type: "integer", minimum: 1 },
+                    groupName: { type: "string" },
+                    public: { type: "boolean" },
+                    members: {
+                        type: "array",
+                        items: {
+                            type: "integer",
+                            minimum: 1
+                        }
+                    },
+                    createdAt: {
+                        type: "string",
+                        format: "date-time"
+                    }
+                }
+            },
+
+
+            // -----------------------------------
+            // Error
+            // -----------------------------------
+            
+            ErrorResponse: {
+                type: "object",
+                additionalProperties: false,
+                required: ["error", "message"],
+                properties: {
+                    error: { type: "string" },
+                    message: { type: "string" },
+                    details: {
+                        type: "object",
+                        nullable: true,
+                        additionalProperties: true,
+                    },
+                },
+            },
+
         },
     },
 
