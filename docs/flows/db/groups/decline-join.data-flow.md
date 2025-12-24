@@ -17,7 +17,7 @@ sequenceDiagram
 
     API-->>UI: 200 OK JoinRequestDTO
 ```
-## Data Objects
+## Path details
 ### Path Params
 ```ts
 groupId: integer
@@ -27,22 +27,4 @@ requestId: integer
 ```ts
 auth.userId: integer
 Authenticated requester id.
-```
-### GroupJoinRequest (Database Row)
-```ts
-id: integer
-groupId: integer
-userId: integer
-status: "pending" | "approved" | "rejected"
-createdAt: timestamp
-decidedAt: timestamp | null
-```
-### JoinRequestDTO (200 OK)
-```ts
-requestId: integer
-groupId: integer
-userId: integer
-status: "rejected"
-createdAt: timestamp
-decidedAt: timestamp
 ```

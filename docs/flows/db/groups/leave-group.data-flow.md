@@ -17,7 +17,7 @@ sequenceDiagram
 
     API-->>UI: 200 OK LeaveGroupResponseDTO
 ```
-## Data Objecst
+## Path details
 ### Path Params
 ```ts
 groupId: integer
@@ -25,16 +25,4 @@ groupId: integer
 ### Auth Context
 ```ts
 auth.userId: integer
-```
-### Database Group Row (minimum relied-upon fields)
-```ts
-id: integer
-ownerId: integer
-deletedAt: timestamp | null
-```
-### LeaveGroupResponseDTO (200 OK)
-```ts
-groupId: integer
-userId: integer
-leftAt: timestamp
 ```

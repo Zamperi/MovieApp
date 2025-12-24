@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import { groupService } from "../services/groups.service";
+import type { AuthRequest } from "../auth/authMiddleware";
+import { CreateGroupRequestDTO } from "../schemas/groups.schema";
 
 export const groupController = {
     list: async (req: Request, res: Response) => {
@@ -30,7 +32,6 @@ export const groupController = {
             }
 
             req.log.info({ groupId }, "Fetching group");
-
             const dto = await groupService.getById(groupId);
 
             if (!dto) {
@@ -48,6 +49,39 @@ export const groupController = {
             return res.status(500).json({
                 error: "INTERNAL_SERVER_ERROR",
                 message: "Error while fetching a group",
+            });
+        }
+    },
+
+    createGroup: async (req: AuthRequest, res: Response) => {
+        try {
+            const userId = req.userId;
+
+            if (!userId) {
+                return res.status(401).json("Missing token");
+            }
+
+            const parsed = CreateGroupRequestDTO.safeParse(req.body);
+            if (!parsed.success) {
+                req.log.warn({ issues: parsed.error.issues }, "invalid create group payload");
+                return res.status(400).json({
+                    error: "BAD_REQUEST",
+                    message: "Invalid groupName or isPublic",
+                });
+            }
+
+            const { groupName, isPublic } = parsed.data;
+
+            req.log.info({ userId, groupName, isPublic }, "Creating a group");
+            const dto = await groupService.createGroup(userId, groupName, isPublic);
+
+            req.log.info({ groupId: dto.groupId }, "Group created successfully");
+            return res.status(201).json(dto);
+        } catch (error) {
+            req.log.error({ err: error }, "Error while creating a group");
+            return res.status(500).json({
+                error: "INTERNAL_SERVER_ERROR",
+                message: "Error while creating a group",
             });
         }
     },
