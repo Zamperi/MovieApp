@@ -17,7 +17,7 @@ sequenceDiagram
   API-->>UI: 200 OK (DeletionResultDTO or GroupDTO)
 ```
 
-## Data Objects
+## Path details
 ### Path Params
 ```ts
 - groupId: integer (Positive integer)
@@ -26,26 +26,4 @@ sequenceDiagram
 ```ts
 auth.userId: integer
 Authenticated requester id (from token/session).
-```
-
-### Database Group Row
-```ts
-- id: integer
-- name: string
-- ownerId: integer
-- public: boolean
-- createdAt: timestamp
-- updatedAt: timestamp
-- deletedAt: timestamp | null
-```
-
-### DeletionResultDTO
-```ts
-groupId: integer
-deletedAt: timestamp
-```
-Alternative: Empty success response
-If you return no body on success, document it explicitly:
-```ts
-Response body: empty
 ```

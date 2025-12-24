@@ -21,7 +21,7 @@ sequenceDiagram
     API-->>UI: 201 Created JoinRequestDTO
 ```
 
-## Data Objects
+## Path details
 ### Path Params
 groupId: integer 
 
@@ -30,21 +30,3 @@ groupId: integer
 auth.userId: integer
 ```
 Authenticated requester id.
-
-### GroupJoinRequest (Database Row)
-```ts
-id: integer
-groupId: integer
-userId: integer
-status: "pending" | "approved" | "rejected"
-createdAt: timestamp
-decidedAt: timestamp | null
-```
-### JoinRequestDTO (201 Created)
-```ts
-requestId: integer
-groupId: integer
-userId: integer
-status: "pending"
-createdAt: timestamp
-```

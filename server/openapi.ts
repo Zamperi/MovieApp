@@ -396,7 +396,7 @@ export const openapi: OpenAPIV3.Document = {
         "/api/groups/{groupId}": {
             get: {
                 operationId: "GetSingleGroup",
-                summary: "Get singke group",
+                summary: "Get single group",
                 responses: {
                     "200": {
                         description: "A group fetched succesfully",
@@ -409,7 +409,81 @@ export const openapi: OpenAPIV3.Document = {
                 },
             },
         },
+        "/api/groups": {
+            post: {
+                operationId: "CreateGroup",
+                summary: "Create a group",
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            schema: { $ref: "#/components/schemas/CreateGroupRequestDTO" },
+                        },
+                    },
+                },
+                responses: {
+                    "201": {
+                        description: "Group created successfully",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/GroupResponseDTO" },
+                            },
+                        },
+                    },
 
+                    "400": {
+                        description: "Validation error",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                                examples: {
+                                    validationError: {
+                                        value: {
+                                            error: "VALIDATION_ERROR",
+                                            message: "name must be a non-empty string; public must be boolean",
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+
+                    "401": {
+                        description: "Authentication required",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                                examples: {
+                                    unauthorized: {
+                                        value: {
+                                            error: "UNAUTHORIZED",
+                                            message: "Authentication required",
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+
+                    "500": {
+                        description: "Database error",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                                examples: {
+                                    dbError: {
+                                        value: {
+                                            error: "DB_ERROR",
+                                            message: "Database error",
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
     },
 
 
@@ -517,7 +591,7 @@ export const openapi: OpenAPIV3.Document = {
             },
 
             //-----------------------------------
-            //Groups
+            // Groups
             //-----------------------------------
 
             GroupListItemDTO: {
@@ -526,42 +600,102 @@ export const openapi: OpenAPIV3.Document = {
                 required: ["groupId", "groupName"],
                 properties: {
                     groupId: { type: "integer", minimum: 1 },
-                    groupName: { type: "string" }
-                }
+                    groupName: { type: "string", minLength: 1 },
+                },
             },
+
             GroupsResponseDTO: {
                 type: "array",
                 items: {
-                    $ref: "#/components/schemas/GroupListItemDTO"
-                }
+                    $ref: "#/components/schemas/GroupListItemDTO",
+                },
             },
-            GroupResponseDTO: {
+
+            GroupDTO: {
                 type: "object",
                 additionalProperties: false,
-                required: ["groupId", "groupName", "public", "members", "createdAt"],
+                required: ["groupId", "groupName", "isPublic", "createdAt"],
                 properties: {
                     groupId: { type: "integer", minimum: 1 },
-                    groupName: { type: "string" },
-                    public: { type: "boolean" },
+                    groupName: { type: "string", minLength: 1 },
+                    isPublic: { type: "boolean" },
+                    createdAt: { type: "string", format: "date-time" },
+                },
+            },
+
+            GroupWithMembersDTO: {
+                type: "object",
+                additionalProperties: false,
+                required: ["groupId", "groupName", "isPublic", "members", "createdAt"],
+                properties: {
+                    groupId: { type: "integer", minimum: 1 },
+                    groupName: { type: "string", minLength: 1 },
+                    isPublic: { type: "boolean" },
                     members: {
                         type: "array",
                         items: {
                             type: "integer",
-                            minimum: 1
-                        }
+                            minimum: 1,
+                        },
                     },
-                    createdAt: {
-                        type: "string",
-                        format: "date-time"
-                    }
-                }
+                    createdAt: { type: "string", format: "date-time" },
+                },
             },
+
+            CreateGroupRequestDTO: {
+                type: "object",
+                additionalProperties: false,
+                required: ["groupName", "isPublic"],
+                properties: {
+                    groupName: { type: "string", minLength: 1 },
+                    isPublic: { type: "boolean" },
+                },
+            },
+
+            JoinRequestDTO: {
+                type: "object",
+                additionalProperties: false,
+                required: ["requestId", "groupId", "userId", "status", "createdAt"],
+                properties: {
+                    requestId: { type: "integer", minimum: 1 },
+                    groupId: { type: "integer", minimum: 1 },
+                    userId: { type: "integer", minimum: 1 },
+                    status: {
+                        type: "string",
+                        enum: ["pending", "approved", "rejected"],
+                    },
+                    createdAt: { type: "string", format: "date-time" },
+                    decidedAt: { type: "string", format: "date-time" },
+                },
+            },
+
+            LeaveGroupResponseDTO: {
+                type: "object",
+                additionalProperties: false,
+                required: ["groupId", "userId", "leftAt"],
+                properties: {
+                    groupId: { type: "integer", minimum: 1 },
+                    userId: { type: "integer", minimum: 1 },
+                    leftAt: { type: "string", format: "date-time" },
+                },
+            },
+
+            DeleteGroupResponseDTO: {
+                type: "object",
+                additionalProperties: false,
+                required: ["groupId", "deletedAt"],
+                properties: {
+                    groupId: { type: "integer", minimum: 1 },
+                    deletedAt: { type: "string", format: "date-time" },
+                },
+            },
+
 
 
             // -----------------------------------
             // Error
             // -----------------------------------
-            
+
             ErrorResponse: {
                 type: "object",
                 additionalProperties: false,

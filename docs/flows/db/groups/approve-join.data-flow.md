@@ -21,7 +21,7 @@ sequenceDiagram
     API-->>UI: 200 OK JoinRequestDTO
 
 ```
-## Data Objects
+## Path details
 ### Path Params
 ```ts
 groupId: integer
@@ -31,27 +31,4 @@ requestId: integer
 ```ts
 auth.userId: integer
 Authenticated requester id.
-```
-### GroupJoinRequest (Database Row)
-```ts
-id: integer
-groupId: integer
-userId: integer
-status: "pending" | "approved" | "rejected"
-createdAt: timestamp
-decidedAt: timestamp | null
-```
-### Membership (on approve)
-
-User from join request is added to group members<br>
-Membership creation and request update are treated as one logical operation
-
-### JoinRequestDTO (200 OK)
-```ts
-requestId: integer
-groupId: integer
-userId: integer
-status: "approved"
-createdAt: timestamp
-decidedAt: timestamp
 ```

@@ -16,9 +16,25 @@ export const groupService = {
         return {
             groupId: group.id,
             groupName: group.name,
-            public: group.public,
+            isPublic: group.isPublic,
             members: group.members.map((m) => m.id),
             createdAt: group.createdAt.toISOString(),
+        };
+    },
+
+    createGroup: async (ownerId: number, groupName: string, isPublic: boolean) => {
+        const created = await groupRepo.create({
+            name: groupName,
+            ownerId,
+            isPublic,
+        });
+
+        return {
+            groupId: created.id,
+            groupName: created.name,
+            isPublic: created.isPublic,
+            members: created.members.map((m) => m.id),
+            createdAt: created.createdAt.toISOString(),
         };
     },
 };

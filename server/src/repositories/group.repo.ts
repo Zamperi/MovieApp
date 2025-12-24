@@ -3,7 +3,7 @@ import { prisma } from "../lib/prisma";
 export const groupRepo = {
     list: () =>
         prisma.group.findMany({
-            where: { deletedAt: null },
+            where: { deletedAt: null, isPublic: true },
             orderBy: { id: "desc" },
             take: 50,
             select: {
@@ -13,16 +13,31 @@ export const groupRepo = {
         }),
 
     getById: (groupId: number) =>
-        prisma.group.findUnique({
-            where: { id: groupId },
+        prisma.group.findFirst({
+            where: { id: groupId, deletedAt: null },
             select: {
                 id: true,
                 name: true,
-                public: true,
+                isPublic: true,
                 createdAt: true,
-                members: {
-                    select: { id: true },
-                },
+                members: { select: { id: true } },
+            },
+        }),
+
+    create: (args: { name: string; ownerId: number; isPublic: boolean }) =>
+        prisma.group.create({
+            data: {
+                name: args.name,
+                ownerId: args.ownerId,
+                isPublic: args.isPublic,
+                members: { connect: [{ id: args.ownerId }] },
+            },
+            select: {
+                id: true,
+                name: true,
+                isPublic: true,
+                createdAt: true,
+                members: { select: { id: true } },
             },
         }),
 };

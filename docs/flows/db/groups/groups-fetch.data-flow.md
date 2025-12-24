@@ -11,29 +11,3 @@ API ->> DB: Query public groups
 DB -->> API: Database Group Rows
 API -->> UI: 200 OK<br>Groups Response DTO
 ```
-
-### Data objects
-
-#### Database Group Row
-```ts
-- id: integer
-- name: string
-- ownerId: integer
-- public: boolean
-- createdAt: DateTime
-- updatedAt: DateTime
-- deletedAt: DateTime | null
-```
-
-
-
-#### GroupsResponseDTO
-```ts
-Array<GroupListItemDTO>
-```
-
-#### GroupListItemDTO
-```ts
-- groupId: integer
-- groupName: string
-```
