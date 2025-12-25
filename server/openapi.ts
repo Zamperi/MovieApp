@@ -394,21 +394,124 @@ export const openapi: OpenAPIV3.Document = {
             },
         },
         "/api/groups/{groupId}": {
+            parameters: [
+                {
+                    name: "groupId",
+                    in: "path",
+                    required: true,
+                    schema: { type: "integer", minimum: 1 },
+                },
+            ],
             get: {
-                operationId: "GetSingleGroup",
+                operationId: "getSingleGroup",
                 summary: "Get single group",
                 responses: {
                     "200": {
-                        description: "A group fetched succesfully",
+                        description: "A group fetched successfully",
                         content: {
                             "application/json": {
-                                schema: { $ref: "#/components/schemas/GroupResponseDTO" }
-                            }
-                        }
+                                schema: { $ref: "#/components/schemas/GroupResponseDTO" },
+                            },
+                        },
+                    },
+                    "400": {
+                        description: "Invalid groupId",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                            },
+                        },
+                    },
+                    "401": {
+                        description: "Missing authentication",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                            },
+                        },
+                    },
+                    "403": {
+                        description: "Forbidden. Requester is not allowed to access this group.",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                            },
+                        },
+                    },
+                    "404": {
+                        description: "Group does not exist",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                            },
+                        },
+                    },
+                    "500": {
+                        description: "Server error",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                            },
+                        },
+                    },
+                },
+            },
+            delete: {
+                operationId: "deleteGroup",
+                summary: "Delete a group",
+                responses: {
+                    "200": {
+                        description: "A group deleted successfully",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/DeleteGroupResponseDTO" },
+                            },
+                        },
+                    },
+                    "400": {
+                        description: "Invalid groupId",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                            },
+                        },
+                    },
+                    "401": {
+                        description: "Missing authentication",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                            },
+                        },
+                    },
+                    "403": {
+                        description: "Forbidden. Requester is not a group owner.",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                            },
+                        },
+                    },
+                    "404": {
+                        description: "Group does not exist or is already deleted",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                            },
+                        },
+                    },
+                    "500": {
+                        description: "Server error",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                            },
+                        },
                     },
                 },
             },
         },
+
         "/api/groups": {
             post: {
                 operationId: "CreateGroup",
@@ -426,7 +529,7 @@ export const openapi: OpenAPIV3.Document = {
                         description: "Group created successfully",
                         content: {
                             "application/json": {
-                                schema: { $ref: "#/components/schemas/GroupResponseDTO" },
+                                schema: { $ref: "#/components/schemas/GroupDTO" },
                             },
                         },
                     },
