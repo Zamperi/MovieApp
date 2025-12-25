@@ -86,7 +86,7 @@ export const groupController = {
         }
     },
 
-    deleteGroup: async (req: Request, res: Response) => {
+    deleteGroup: async (req: AuthRequest, res: Response) => {
         try {
             const userId = req.userId;
             if (!userId) return res.status(401).json("Missing token");
@@ -113,5 +113,16 @@ export const groupController = {
             req.log.error({ err: error }, "Error while deleting a group");
             return res.status(500).json({ error: "INTERNAL_SERVER_ERROR", message: "Error while deleting a group" });
         }
+    },
+
+    joinRequestGroup: async () => {
+
+    },
+
+    approveJoinRequestGroup: async () => {},
+    declineJoinRequestGroup: async () => {},
+
+    leavegroup: async() => {
+
     }
 };
