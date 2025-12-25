@@ -7,5 +7,6 @@ const router = Router();
 router.get('/all', groupController.list);
 router.get('/:groupId', groupController.getGroup)
 router.post('/', authMiddleware, groupController.createGroup);
+router.delete('/:groupId', authMiddleware, groupController.deleteGroup);
 
 export default router;

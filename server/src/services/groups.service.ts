@@ -37,4 +37,36 @@ export const groupService = {
             createdAt: created.createdAt.toISOString(),
         };
     },
+
+    softDeleteGroup: async (requesterId: number, groupId: number) => {
+        const g = await groupRepo.getByIdForDelete(groupId);
+
+        if (!g) {
+            return { status: 404 as const };
+        }
+
+        if (g.ownerId !== requesterId) {
+            return { status: 403 as const };
+        }
+
+        const deleted = await groupRepo.softDelete(groupId);
+
+        return {
+            status: 200 as const,
+            dto: {
+                groupId: deleted.id,
+                deletedAt: deleted.deletedAt!.toISOString(),
+            },
+        };
+    },
+
+
+    hardDeleteGroup: async (groupId: number) => {
+        const deleted = await groupRepo.hardDelete(groupId);
+
+        return {
+            groupId: deleted.id,
+            deletedat: deleted.deletedAt!.toISOString(),
+        }
+    }
 };

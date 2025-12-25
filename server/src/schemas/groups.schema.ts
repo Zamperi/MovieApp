@@ -5,6 +5,13 @@ const ISODateTimeString = z.string().refine(
     { message: "Invalid ISO date-time string" }
 );
 
+export const GroupIdParamsDTO = z
+  .object({
+    groupId: z.coerce.number().int().min(1),
+  })
+  .strict();
+
+
 export const GroupListItemDTO = z
     .object({
         groupId: z.number().int().min(1),

@@ -40,4 +40,22 @@ export const groupRepo = {
                 members: { select: { id: true } },
             },
         }),
+
+    getByIdForDelete: (groupId: number) =>
+        prisma.group.findFirst({
+            where: { id: groupId, deletedAt: null },
+            select: { id: true, ownerId: true },
+        }),
+
+    softDelete: (groupId: number) =>
+        prisma.group.update({
+            where: { id: groupId },
+            data: { deletedAt: new Date() },
+            select: { id: true, deletedAt: true },
+        }),
+
+    hardDelete: (groupId: number) =>
+        prisma.group.delete({
+            where: { id: groupId }
+        }),
 };

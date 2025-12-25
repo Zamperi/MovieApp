@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { groupService } from "../services/groups.service";
 import type { AuthRequest } from "../auth/authMiddleware";
-import { CreateGroupRequestDTO } from "../schemas/groups.schema";
+import { CreateGroupRequestDTO, DeleteGroupResponseDTO, GroupIdParamsDTO } from "../schemas/groups.schema";
 
 export const groupController = {
     list: async (req: Request, res: Response) => {
@@ -85,4 +85,44 @@ export const groupController = {
             });
         }
     },
+
+    deleteGroup: async (req: AuthRequest, res: Response) => {
+        try {
+            const userId = req.userId;
+            if (!userId) return res.status(401).json("Missing token");
+
+            const parsed = GroupIdParamsDTO.safeParse(req.params);
+            if (!parsed.success) {
+                return res.status(400).json({ error: "BAD_REQUEST", message: "Invalid group id" });
+            }
+
+            const { groupId } = parsed.data;
+
+            const result = await groupService.softDeleteGroup(userId, groupId);
+
+            if (result.status === 404) {
+                return res.status(404).json({ error: "GROUP_NOT_FOUND", message: "Group not found" });
+            }
+            if (result.status === 403) {
+                return res.status(403).json({ error: "FORBIDDEN", message: "Requester is not a group owner" });
+            }
+
+            const out = DeleteGroupResponseDTO.parse(result.dto);
+            return res.status(200).json(out);
+        } catch (error) {
+            req.log.error({ err: error }, "Error while deleting a group");
+            return res.status(500).json({ error: "INTERNAL_SERVER_ERROR", message: "Error while deleting a group" });
+        }
+    },
+
+    joinRequestGroup: async () => {
+
+    },
+
+    approveJoinRequestGroup: async () => {},
+    declineJoinRequestGroup: async () => {},
+
+    leavegroup: async() => {
+
+    }
 };

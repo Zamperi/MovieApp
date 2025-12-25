@@ -10,7 +10,7 @@ sequenceDiagram
     DB-->>API: Created group row
     API->>DB: Create membership (add owner as first member)
     DB-->>API: Membership created
-    API-->>UI: 201 Created GroupResponseDTO
+    API-->>UI: 201 Created GroupDTO
 ```
 ## Path details
 ### Auth Context
