@@ -18,6 +18,7 @@ import Signin from './screens/Signin';
 import PersonPage from './screens/PersonPage';
 import PageLayout from './layout/PageLayout';
 import NotFoundPage from './screens/NotFoundPage';
+import GroupPage from './screens/GroupPage';
 
 export default function App() {
 
@@ -65,6 +66,12 @@ export default function App() {
               <Route path="/groups" element={
                 <PageLayout>
                   <Groups />
+                </PageLayout>
+              } />
+
+              <Route path="/group/:id" element={
+                <PageLayout>
+                  <GroupPage />
                 </PageLayout>
               } />
 

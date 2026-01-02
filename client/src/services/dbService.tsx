@@ -6,10 +6,38 @@ export type GroupListItemDTO = {
     createdAt?: string | null;
 };
 
+export type GroupMemberDTO = {
+    id: number;
+    username: string;
+};
+
+export type GroupDetailDTO = {
+    id: number;
+    name: string;
+    isPublic: boolean;
+    owner: GroupMemberDTO;
+    members: GroupMemberDTO[];
+    createdAt?: string | null;
+};
+
+export type JoinRequestStatus = "pending" | "approved" | "rejected";
+
+export type JoinRequestDTO = {
+    requestId: number;
+    groupId: number;
+    userId: number;
+    status: JoinRequestStatus;
+    createdAt: string;
+    decidedAt?: string;
+};
+
 type GroupApiDTO = {
     id?: number;
     name?: string;
     createdAt?: string | null;
+    isPublic?: boolean;
+    owner?: GroupMemberDTO;
+    members?: GroupMemberDTO[];
     groupId?: number;
     groupName?: string;
 };
@@ -23,6 +51,36 @@ function toGroupListItemDTO(x: GroupApiDTO): GroupListItemDTO | null {
     return {
         id,
         name,
+        createdAt: x.createdAt ?? null,
+    };
+}
+
+function toGroupDetailDTO(x: GroupApiDTO): GroupDetailDTO | null {
+    const id = x.id ?? x.groupId;
+    const name = x.name ?? x.groupName;
+
+    if (
+        typeof id !== "number" ||
+        typeof name !== "string" ||
+        !Array.isArray(x.members) ||
+        typeof x.owner !== "object" ||
+        x.owner === null
+    ) {
+        return null;
+    }
+
+    const members: GroupMemberDTO[] = x.members
+        .map((m) => (typeof m?.id === "number" && typeof m?.username === "string" ? m : null))
+        .filter((m): m is GroupMemberDTO => m !== null);
+
+    if (typeof x.owner.id !== "number" || typeof x.owner.username !== "string") return null;
+
+    return {
+        id,
+        name,
+        isPublic: Boolean(x.isPublic),
+        owner: { id: x.owner.id, username: x.owner.username },
+        members,
         createdAt: x.createdAt ?? null,
     };
 }
@@ -87,6 +145,66 @@ export async function createGroup(input: CreateGroupInput): Promise<GroupListIte
     if (!dto) throw new Error("Invalid group payload received");
 
     return dto;
+}
+
+export async function getGroup(groupId: number): Promise<GroupDetailDTO | null> {
+    const api_url = import.meta.env.VITE_API_URL;
+
+    try {
+        const response = await fetch(`${api_url}/api/groups/${groupId}`, {
+            credentials: "include",
+        });
+
+        if (!response.ok) {
+            return null;
+        }
+
+        const data: unknown = await response.json();
+        const dto = toGroupDetailDTO(data as GroupApiDTO);
+        return dto;
+    } catch (error) {
+        console.error(error);
+        return null;
+    }
+}
+
+export async function getJoinRequest(groupId: number): Promise<JoinRequestDTO | null> {
+    const api_url = import.meta.env.VITE_API_URL;
+
+    try {
+        const response = await fetch(`${api_url}/api/groups/${groupId}/join-requests/me`, {
+            credentials: "include",
+        });
+
+        if (response.status === 404) return null;
+        if (!response.ok) return null;
+
+        const data = (await response.json()) as JoinRequestDTO;
+        return data;
+    } catch (error) {
+        console.error(error);
+        return null;
+    }
+}
+
+export async function sendJoinRequest(groupId: number): Promise<JoinRequestDTO> {
+    const api_url = import.meta.env.VITE_API_URL;
+
+    const response = await fetch(`${api_url}/api/groups/${groupId}/join-requests`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+            "Content-Type": "application/json",
+        },
+    });
+
+    if (!response.ok) {
+        const message = await response.text();
+        throw new Error(message || "Failed to send join request");
+    }
+
+    const data = (await response.json()) as JoinRequestDTO;
+    return data;
 }
 
 export async function userLogin(email: string, password: string): Promise<User> {

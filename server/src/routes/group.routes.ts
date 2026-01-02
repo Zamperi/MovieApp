@@ -6,6 +6,7 @@ const router = Router();
 
 router.get('/all', groupController.list);
 router.get('/:groupId', groupController.getGroup)
+router.get('/:groupId/join-requests/me', authMiddleware, groupController.getJoinRequestStatus)
 router.post('/', authMiddleware, groupController.createGroup);
 router.delete('/:groupId', authMiddleware, groupController.deleteGroup);
 router.post('/:groupId/join-requests', authMiddleware, groupController.joinRequestGroup);

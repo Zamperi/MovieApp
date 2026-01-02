@@ -86,7 +86,11 @@ describe("Groups routes", () => {
       groupId: group.id,
       groupName: "Test Group",
       isPublic: true,
-      members: expect.arrayContaining([member1.id, member2.id]),
+      owner: { id: owner.id, username: owner.username },
+      members: expect.arrayContaining([
+        { id: member1.id, username: member1.username },
+        { id: member2.id, username: member2.username },
+      ]),
       createdAt: expect.any(String),
     });
   });
@@ -120,7 +124,8 @@ describe("Groups routes", () => {
         groupId: expect.any(Number),
         groupName: "Test Group",
         isPublic: true,
-        members: expect.arrayContaining([owner.id]),
+        owner: { id: owner.id, username: owner.username },
+        members: expect.arrayContaining([{ id: owner.id, username: owner.username }]),
         createdAt: expect.any(String),
       })
     );
@@ -221,6 +226,34 @@ describe("Groups routes", () => {
     expect(res.body?.userId).toBe(user.id);
     expect(res.body?.status).toBe("pending");
     expect(typeof res.body?.createdAt).toBe("string");
+  });
+
+  it("GET /api/groups/:groupId/join-requests/me -> 200 returns current status", async () => {
+    const owner = await mkUser(999);
+    const ownerAgent = await loginAgent(owner.email, "Password123!");
+
+    const createRes = await ownerAgent
+      .post("/api/groups")
+      .send({ groupName: "Test Group", isPublic: true });
+
+    expect(createRes.status).toBe(201);
+
+    const requester = await mkUser(998);
+    const requesterAgent = await loginAgent(requester.email, "Password123!");
+
+    await requesterAgent.post(`/api/groups/${createRes.body.groupId}/join-requests`);
+
+    const statusRes = await requesterAgent.get(`/api/groups/${createRes.body.groupId}/join-requests/me`);
+
+    expect(statusRes.status).toBe(200);
+    expect(statusRes.body).toEqual(
+      expect.objectContaining({
+        groupId: createRes.body.groupId,
+        userId: requester.id,
+        status: "pending",
+        requestId: expect.any(Number),
+      })
+    );
   });
 
   it("POST /api/groups/:groupId/join-requests -> 400 when groupId is not a positive integer", async () => {

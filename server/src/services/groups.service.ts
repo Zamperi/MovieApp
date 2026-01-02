@@ -17,7 +17,14 @@ export const groupService = {
             groupId: group.id,
             groupName: group.name,
             isPublic: group.isPublic,
-            members: group.members.map((m) => m.id),
+            owner: {
+                id: group.owner.id,
+                username: group.owner.username,
+            },
+            members: group.members.map((m) => ({
+                id: m.id,
+                username: m.username,
+            })),
             createdAt: group.createdAt.toISOString(),
         };
     },
@@ -33,7 +40,14 @@ export const groupService = {
             groupId: created.id,
             groupName: created.name,
             isPublic: created.isPublic,
-            members: created.members.map((m) => m.id),
+            owner: {
+                id: created.owner.id,
+                username: created.owner.username,
+            },
+            members: created.members.map((m) => ({
+                id: m.id,
+                username: m.username,
+            })),
             createdAt: created.createdAt.toISOString(),
         };
     },
