@@ -1,4 +1,4 @@
-import type { User } from "../context/UserContext";
+import type { RegisterInput, User } from "../context/UserContext";
 
 export type GroupListItemDTO = {
     id: number;
@@ -6,12 +6,12 @@ export type GroupListItemDTO = {
     createdAt?: string;
 };
 
-function isGroupListItemDTO(x: any): x is GroupListItemDTO {
+function isGroupListItemDTO(x: unknown): x is GroupListItemDTO {
     return (
-        x &&
+        !!x &&
         typeof x === "object" &&
-        typeof x.id === "number" &&
-        typeof x.name === "string"
+        typeof (x as GroupListItemDTO).id === "number" &&
+        typeof (x as GroupListItemDTO).name === "string"
     );
 }
 
@@ -77,4 +77,24 @@ export async function userLogout() {
     });
 
     if (!response.ok) throw new Error("Logout failed");
+}
+
+export async function userRegister(data: RegisterInput) {
+    const api_url = import.meta.env.VITE_API_URL;
+
+    const response = await fetch(`${api_url}/api/auth/register`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+        const message = await response.text();
+        throw new Error(message || "Registration failed");
+    }
+
+    return response.json();
 }

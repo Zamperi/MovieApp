@@ -17,7 +17,6 @@ import {
   DarkMode as DarkModeIcon,
   LightMode as LightModeIcon,
   AccountCircle,
-  Language,
   Menu as MenuIcon,
   Login,
 } from "@mui/icons-material";
@@ -61,6 +60,14 @@ export default function Header() {
   };
 
   const handleSignInClick = () => setLoginOpen(true);
+  const handleSwitchToSignup = () => {
+    setLoginOpen(false);
+    setSignupOpen(true);
+  };
+  const handleSwitchToSignin = () => {
+    setSignupOpen(false);
+    setLoginOpen(true);
+  };
 
   const handleSignOutClick = async () => {
     await logout();
@@ -190,8 +197,16 @@ export default function Header() {
         </Container>
       </AppBar>
 
-      <LoginDialog open={loginOpen} onClose={() => setLoginOpen(false)} />
-      <SignupDialog open={signupOpen} onClose={() => setSignupOpen(false)} />
+      <LoginDialog
+        open={loginOpen}
+        onClose={() => setLoginOpen(false)}
+        onSwitchToSignup={handleSwitchToSignup}
+      />
+      <SignupDialog
+        open={signupOpen}
+        onClose={() => setSignupOpen(false)}
+        onSwitchToLogin={handleSwitchToSignin}
+      />
     </>
   );
 }

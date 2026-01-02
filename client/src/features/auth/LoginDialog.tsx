@@ -10,9 +10,10 @@ import LoginForm from "./LoginForm";
 export interface DialogProps {
     open: boolean;
     onClose: () => void;
+    onSwitchToSignup?: () => void;
 }
 
-export default function LoginDialog({ open, onClose }: DialogProps) {
+export default function LoginDialog({ open, onClose, onSwitchToSignup }: DialogProps) {
     return (
         <Dialog
             open={open}
@@ -45,7 +46,7 @@ export default function LoginDialog({ open, onClose }: DialogProps) {
                     pb: "1.5rem",
                 }}
             >
-                <LoginForm onSuccess={onClose} />
+                <LoginForm onSuccess={onClose} onSwitchToSignUp={onSwitchToSignup} />
             </DialogContent>
         </Dialog>
     );
