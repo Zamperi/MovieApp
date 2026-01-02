@@ -12,9 +12,10 @@ import { useToast } from "../../context/useToast";
 
 interface LoginFormProps {
     onSuccess?: () => void;
+    onSwitchToSignUp?: () => void;
 }
 
-export default function LoginForm({ onSuccess }: LoginFormProps) {
+export default function LoginForm({ onSuccess, onSwitchToSignUp }: LoginFormProps) {
     const { login, user } = useUser();
     const { showToast } = useToast();
 
@@ -38,7 +39,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
                 const name = user?.firstname || "there";
                 showToast(`Welcome back ${name}`, "success");
             }, 0);
-        } catch (err) {
+        } catch {
             setErrorMsg("Invalid email or password");
             showToast("Login failed", "error");
         } finally {
@@ -104,6 +105,14 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
                 disabled={loading}
             >
                 {loading ? "Signing in..." : "Sign in"}
+            </Button>
+
+            <Button
+                variant="text"
+                onClick={onSwitchToSignUp}
+                disabled={loading}
+            >
+                Create an account
             </Button>
         </Box>
     );

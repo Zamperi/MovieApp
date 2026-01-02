@@ -89,6 +89,8 @@ model User {
 
   refreshTokens RefreshToken[]
   passwordHash   String
+
+  groupJoinRequests GroupJoinRequest[]
 }
 
 model Group {
@@ -103,7 +105,33 @@ model Group {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
+
+  joinRequests GroupJoinRequest[]
 }
+
+enum GroupJoinRequestStatus {
+  pending
+  approved
+  rejected
+}
+
+model GroupJoinRequest {
+  id        Int                    @id @default(autoincrement())
+  groupId   Int
+  userId    Int
+  status    GroupJoinRequestStatus @default(pending)
+  createdAt DateTime               @default(now())
+  decidedAt DateTime?
+
+  // relations
+  group     Group                  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user      User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([groupId])
+  @@index([userId])
+  @@index([status])
+}
+
 
 model RefreshToken {
   id        Int      @id @default(autoincrement())

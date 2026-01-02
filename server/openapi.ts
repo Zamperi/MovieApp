@@ -422,14 +422,6 @@ export const openapi: OpenAPIV3.Document = {
                             },
                         },
                     },
-                    "401": {
-                        description: "Missing authentication",
-                        content: {
-                            "application/json": {
-                                schema: { $ref: "#/components/schemas/ErrorResponse" },
-                            },
-                        },
-                    },
                     "403": {
                         description: "Forbidden. Requester is not allowed to access this group.",
                         content: {
@@ -505,6 +497,405 @@ export const openapi: OpenAPIV3.Document = {
                         content: {
                             "application/json": {
                                 schema: { $ref: "#/components/schemas/ErrorResponse" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+
+        "/api/groups/{groupId}/join-requests": {
+            parameters: [
+                {
+                    name: "groupId",
+                    in: "path",
+                    required: true,
+                    schema: { type: "integer", minimum: 1 },
+                },
+            ],
+            post: {
+                operationId: "createGroupJoinRequest",
+                summary: "Create a join request for a public group",
+                responses: {
+                    "201": {
+                        description: "Join request created",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/JoinRequestDTO" },
+                            },
+                        },
+                    },
+                    "400": {
+                        description: "Invalid groupId",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                                examples: {
+                                    validationError: {
+                                        value: {
+                                            error: "VALIDATION_ERROR",
+                                            message: "groupId must be a positive integer",
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    "401": {
+                        description: "Unauthorized (missing or invalid authentication)",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                                examples: {
+                                    unauthorized: {
+                                        value: {
+                                            error: "UNAUTHORIZED",
+                                            message: "Authentication required",
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    "403": {
+                        description: "Forbidden (group is not public OR requester is the group owner)",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                                examples: {
+                                    groupNotPublic: {
+                                        value: {
+                                            error: "FORBIDDEN",
+                                            message: "Group is not public",
+                                        },
+                                    },
+                                    ownerCannotJoin: {
+                                        value: {
+                                            error: "FORBIDDEN",
+                                            message: "Owner cannot request to join",
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    "404": {
+                        description: "Group not found",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                                examples: {
+                                    groupNotFound: {
+                                        value: {
+                                            error: "NOT_FOUND",
+                                            message: "Group not found",
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    "409": {
+                        description: "Conflict (already a member OR join request already pending)",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                                examples: {
+                                    alreadyMember: {
+                                        value: {
+                                            error: "CONFLICT",
+                                            message: "Already a member",
+                                        },
+                                    },
+                                    pendingExists: {
+                                        value: {
+                                            error: "CONFLICT",
+                                            message: "Join request already pending",
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    "500": {
+                        description: "Database operation failed",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                                examples: {
+                                    dbError: {
+                                        value: {
+                                            error: "DB_ERROR",
+                                            message: "Database operation failed",
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+
+        "/api/groups/{groupId}/join-requests/{requestId}/approve": {
+            parameters: [
+                {
+                    name: "groupId",
+                    in: "path",
+                    required: true,
+                    schema: { type: "integer", minimum: 1 },
+                },
+                {
+                    name: "requestId",
+                    in: "path",
+                    required: true,
+                    schema: { type: "integer", minimum: 1 },
+                },
+            ],
+            post: {
+                operationId: "approveGroupJoinRequest",
+                summary: "Approve a pending join request (group owner only)",
+                responses: {
+                    "200": {
+                        description: "Join request approved",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/JoinRequestDTO" },
+                            },
+                        },
+                    },
+                    "400": {
+                        description: "Invalid groupId or requestId",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                                examples: {
+                                    validationError: {
+                                        value: {
+                                            error: "VALIDATION_ERROR",
+                                            message: "groupId and requestId must be positive integers",
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    "401": {
+                        description: "Unauthorized (missing or invalid authentication)",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                                examples: {
+                                    unauthorized: {
+                                        value: {
+                                            error: "UNAUTHORIZED",
+                                            message: "Authentication required",
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    "403": {
+                        description: "Forbidden (requester is not the group owner)",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                                examples: {
+                                    notOwner: {
+                                        value: {
+                                            error: "FORBIDDEN",
+                                            message: "Not group owner",
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    "404": {
+                        description: "Group not found OR join request not found",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                                examples: {
+                                    groupNotFound: {
+                                        value: {
+                                            error: "NOT_FOUND",
+                                            message: "Group not found",
+                                        },
+                                    },
+                                    requestNotFound: {
+                                        value: {
+                                            error: "NOT_FOUND",
+                                            message: "Join request not found",
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    "409": {
+                        description: "Conflict (join request is not in pending state)",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                                examples: {
+                                    notPending: {
+                                        value: {
+                                            error: "CONFLICT",
+                                            message: "Request not pending",
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    "500": {
+                        description: "Database operation failed",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                                examples: {
+                                    dbError: {
+                                        value: {
+                                            error: "DB_ERROR",
+                                            message: "Database operation failed",
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+
+        "/api/groups/{groupId}/join-requests/{requestId}/decline": {
+            parameters: [
+                {
+                    name: "groupId",
+                    in: "path",
+                    required: true,
+                    schema: { type: "integer", minimum: 1 },
+                },
+                {
+                    name: "requestId",
+                    in: "path",
+                    required: true,
+                    schema: { type: "integer", minimum: 1 },
+                },
+            ],
+            post: {
+                operationId: "declineGroupJoinRequest",
+                summary: "Decline a pending join request (group owner only)",
+                responses: {
+                    "200": {
+                        description: "Join request declined",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/JoinRequestDTO" },
+                            },
+                        },
+                    },
+                    "400": {
+                        description: "Invalid groupId or requestId",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                                examples: {
+                                    validationError: {
+                                        value: {
+                                            error: "VALIDATION_ERROR",
+                                            message: "groupId and requestId must be positive integers",
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    "401": {
+                        description: "Unauthorized (missing or invalid authentication)",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                                examples: {
+                                    unauthorized: {
+                                        value: {
+                                            error: "UNAUTHORIZED",
+                                            message: "Authentication required",
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    "403": {
+                        description: "Forbidden (requester is not the group owner)",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                                examples: {
+                                    notOwner: {
+                                        value: {
+                                            error: "FORBIDDEN",
+                                            message: "Not group owner",
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    "404": {
+                        description: "Group not found OR join request not found",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                                examples: {
+                                    groupNotFound: {
+                                        value: {
+                                            error: "NOT_FOUND",
+                                            message: "Group not found",
+                                        },
+                                    },
+                                    requestNotFound: {
+                                        value: {
+                                            error: "NOT_FOUND",
+                                            message: "Join request not found",
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    "409": {
+                        description: "Conflict (join request is not in pending state)",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                                examples: {
+                                    notPending: {
+                                        value: {
+                                            error: "CONFLICT",
+                                            message: "Request not pending",
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    "500": {
+                        description: "Database operation failed",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                                examples: {
+                                    dbError: {
+                                        value: {
+                                            error: "DB_ERROR",
+                                            message: "Database operation failed",
+                                        },
+                                    },
+                                },
                             },
                         },
                     },

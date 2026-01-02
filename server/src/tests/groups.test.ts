@@ -194,7 +194,426 @@ describe("Groups routes", () => {
 
     const res = await agent.delete(`/api/groups/1234`);
     expect(res.status).toBe(404);
-  })  
+  })
+
+  it("POST /api/groups/:groupId/join-requests -> 201 creates join request", async () => {
+    const owner = await mkUser(999);
+    const ownerAgent = await loginAgent(owner.email, "Password123!");
+
+    const createRes = await ownerAgent
+      .post("/api/groups")
+      .send({ groupName: "Test Group", isPublic: true });
+
+    expect(createRes.status).toBe(201);
+    expect(typeof createRes.body?.groupId).toBe("number");
+
+    const user = await mkUser(998);
+    const userAgent = await loginAgent(user.email, "Password123!");
+
+    const res = await userAgent.post(
+      `/api/groups/${createRes.body.groupId}/join-requests`
+    );
+
+    expect(res.status).toBe(201);
+
+    expect(typeof res.body?.requestId).toBe("number");
+    expect(res.body?.groupId).toBe(createRes.body.groupId);
+    expect(res.body?.userId).toBe(user.id);
+    expect(res.body?.status).toBe("pending");
+    expect(typeof res.body?.createdAt).toBe("string");
+  });
+
+  it("POST /api/groups/:groupId/join-requests -> 400 when groupId is not a positive integer", async () => {
+    const user = await mkUser(998);
+    const userAgent = await loginAgent(user.email, "Password123!");
+
+    const res = await userAgent.post("/api/groups/-1/join-requests");
+
+    expect(res.status).toBe(400);
+    expect(res.body?.error).toBe("VALIDATION_ERROR");
+    expect(typeof res.body?.message).toBe("string");
+  });
+
+  it("POST /api/groups/:groupId/join-requests -> 401 missing or invalid authentication", async () => {
+    const owner = await mkUser(999);
+    const ownerAgent = await loginAgent(owner.email, "Password123!");
+
+    const createRes = await ownerAgent
+      .post("/api/groups")
+      .send({ groupName: "Test Group", isPublic: true });
+
+    expect(createRes.status).toBe(201);
+    expect(typeof createRes.body?.groupId).toBe("number");
+
+    const res = await request(app).post(
+      `/api/groups/${createRes.body.groupId}/join-requests`
+    );
+
+    expect(res.status).toBe(401);
+    expect(res.body?.error).toBe("UNAUTHORIZED");
+    expect(typeof res.body?.message).toBe("string");
+  });
+
+  it("POST /api/groups/:groupId/join-requests -> 403 requester is a group owner", async () => {
+    const owner = await mkUser(999);
+    const ownerAgent = await loginAgent(owner.email, "Password123!");
+
+    const createRes = await ownerAgent
+      .post("/api/groups")
+      .send({ groupName: "Test Group", isPublic: true });
+
+    expect(createRes.status).toBe(201);
+    expect(typeof createRes.body?.groupId).toBe("number");
+
+    const res = await ownerAgent.post(
+      `/api/groups/${createRes.body.groupId}/join-requests`
+    );
+
+    expect(res.status).toBe(403);
+    expect(res.body?.error).toBe("FORBIDDEN");
+    expect(typeof res.body?.message).toBe("string");
+  });
+
+  it("POST /api/groups/:groupId/join-requests -> Group not found", async () => {
+    const owner = await mkUser(999);
+    const ownerAgent = await loginAgent(owner.email, "Password123!");
+
+    const res = await ownerAgent.post(
+      `/api/groups/99999999/join-requests`
+    );
+
+    expect(res.status).toBe(404);
+    expect(res.body?.error).toBe("NOT_FOUND");
+    expect(typeof res.body?.message).toBe("string");
+  });
+
+  it("POST /api/groups/:groupId/join-requests -> Join request already pending", async () => {
+    const owner = await mkUser(999);
+    const ownerAgent = await loginAgent(owner.email, "Password123!");
+
+    const createRes = await ownerAgent
+      .post("/api/groups")
+      .send({ groupName: "Test Group", isPublic: true });
+
+    expect(createRes.status).toBe(201);
+    expect(typeof createRes.body?.groupId).toBe("number");
+
+    const user = await mkUser(998);
+    const userAgent = await loginAgent(user.email, "Password123!");
+
+    const firstRes = await userAgent.post(
+      `/api/groups/${createRes.body.groupId}/join-requests`
+    );
+    expect(firstRes.status).toBe(201);
+
+    const res = await userAgent.post(
+      `/api/groups/${createRes.body.groupId}/join-requests`
+    );
+
+    expect(res.status).toBe(409);
+    expect(res.body?.error).toBe("CONFLICT");
+    expect(typeof res.body?.message).toBe("string");
+  });
+
+  it("POST /api/groups/:groupId/join-requests/:requestId/approve -> 200 approves pending join request (owner only)", async () => {
+    const owner = await mkUser(999);
+    const ownerAgent = await loginAgent(owner.email, "Password123!");
+
+    const createRes = await ownerAgent
+      .post("/api/groups")
+      .send({ groupName: "Test Group", isPublic: true });
+
+    expect(createRes.status).toBe(201);
+    expect(typeof createRes.body?.groupId).toBe("number");
+
+    const user = await mkUser(998);
+    const userAgent = await loginAgent(user.email, "Password123!");
+
+    const joinRes = await userAgent.post(
+      `/api/groups/${createRes.body.groupId}/join-requests`
+    );
+    expect(joinRes.status).toBe(201);
+    expect(typeof joinRes.body?.requestId).toBe("number");
+
+    const res = await ownerAgent.post(
+      `/api/groups/${createRes.body.groupId}/join-requests/${joinRes.body.requestId}/approve`
+    );
+
+    expect(res.status).toBe(200);
+
+    // JoinRequestDTO assertions
+    expect(res.body?.requestId).toBe(joinRes.body.requestId);
+    expect(res.body?.groupId).toBe(createRes.body.groupId);
+    expect(res.body?.userId).toBe(user.id);
+    expect(res.body?.status).toBe("approved");
+    expect(typeof res.body?.createdAt).toBe("string");
+    expect(typeof res.body?.decidedAt).toBe("string");
+  });
+
+  it("POST /api/groups/:groupId/join-requests/:requestId/decline -> 200 declines pending join request (owner only)", async () => {
+    const owner = await mkUser(999);
+    const ownerAgent = await loginAgent(owner.email, "Password123!");
+
+    const createRes = await ownerAgent
+      .post("/api/groups")
+      .send({ groupName: "Test Group", isPublic: true });
+
+    expect(createRes.status).toBe(201);
+    expect(typeof createRes.body?.groupId).toBe("number");
+
+    const user = await mkUser(998);
+    const userAgent = await loginAgent(user.email, "Password123!");
+
+    const joinRes = await userAgent.post(
+      `/api/groups/${createRes.body.groupId}/join-requests`
+    );
+    expect(joinRes.status).toBe(201);
+    expect(typeof joinRes.body?.requestId).toBe("number");
+
+    const res = await ownerAgent.post(
+      `/api/groups/${createRes.body.groupId}/join-requests/${joinRes.body.requestId}/decline`
+    );
+
+    expect(res.status).toBe(200);
+
+    // JoinRequestDTO assertions
+    expect(res.body?.requestId).toBe(joinRes.body.requestId);
+    expect(res.body?.groupId).toBe(createRes.body.groupId);
+    expect(res.body?.userId).toBe(user.id);
+    expect(res.body?.status).toBe("rejected");
+    expect(typeof res.body?.createdAt).toBe("string");
+    expect(typeof res.body?.decidedAt).toBe("string");
+  });
+
+  it("POST /api/groups/:groupId/join-requests/:requestId/approve -> 400 invalid groupId or requestId", async () => {
+    const owner = await mkUser(999);
+    const ownerAgent = await loginAgent(owner.email, "Password123!");
+
+    const res = await ownerAgent.post(
+      `/api/groups/-1/join-requests/0/approve`
+    );
+
+    expect(res.status).toBe(400);
+    expect(res.body?.error).toBe("VALIDATION_ERROR");
+    expect(typeof res.body?.message).toBe("string");
+  });
+
+  it("POST /api/groups/:groupId/join-requests/:requestId/decline -> 400 invalid groupId or requestId", async () => {
+    const owner = await mkUser(999);
+    const ownerAgent = await loginAgent(owner.email, "Password123!");
+
+    const res = await ownerAgent.post(
+      `/api/groups/-1/join-requests/0/decline`
+    );
+
+    expect(res.status).toBe(400);
+    expect(res.body?.error).toBe("VALIDATION_ERROR");
+    expect(typeof res.body?.message).toBe("string");
+  });
+
+  it("POST /api/groups/:groupId/join-requests/:requestId/approve -> 401 missing or invalid authentication", async () => {
+    const res = await request(app).post(`/api/groups/1/join-requests/1/approve`);
+
+    expect(res.status).toBe(401);
+    expect(res.body?.error).toBe("UNAUTHORIZED");
+    expect(typeof res.body?.message).toBe("string");
+  });
+
+  it("POST /api/groups/:groupId/join-requests/:requestId/decline -> 401 missing or invalid authentication", async () => {
+    const res = await request(app).post(`/api/groups/1/join-requests/1/decline`);
+
+    expect(res.status).toBe(401);
+    expect(res.body?.error).toBe("UNAUTHORIZED");
+    expect(typeof res.body?.message).toBe("string");
+  });
+
+  it("POST /api/groups/:groupId/join-requests/:requestId/approve -> 403 requester is not group owner", async () => {
+    const owner = await mkUser(999);
+    const ownerAgent = await loginAgent(owner.email, "Password123!");
+
+    const createRes = await ownerAgent
+      .post("/api/groups")
+      .send({ groupName: "Test Group", isPublic: true });
+
+    expect(createRes.status).toBe(201);
+
+    const user = await mkUser(998);
+    const userAgent = await loginAgent(user.email, "Password123!");
+
+    const joinRes = await userAgent.post(
+      `/api/groups/${createRes.body.groupId}/join-requests`
+    );
+    expect(joinRes.status).toBe(201);
+
+    const notOwner = await mkUser(997);
+    const notOwnerAgent = await loginAgent(notOwner.email, "Password123!");
+
+    const res = await notOwnerAgent.post(
+      `/api/groups/${createRes.body.groupId}/join-requests/${joinRes.body.requestId}/approve`
+    );
+
+    expect(res.status).toBe(403);
+    expect(res.body?.error).toBe("FORBIDDEN");
+    expect(typeof res.body?.message).toBe("string");
+  });
+
+  it("POST /api/groups/:groupId/join-requests/:requestId/decline -> 403 requester is not group owner", async () => {
+    const owner = await mkUser(999);
+    const ownerAgent = await loginAgent(owner.email, "Password123!");
+
+    const createRes = await ownerAgent
+      .post("/api/groups")
+      .send({ groupName: "Test Group", isPublic: true });
+
+    expect(createRes.status).toBe(201);
+
+    const user = await mkUser(998);
+    const userAgent = await loginAgent(user.email, "Password123!");
+
+    const joinRes = await userAgent.post(
+      `/api/groups/${createRes.body.groupId}/join-requests`
+    );
+    expect(joinRes.status).toBe(201);
+
+    const notOwner = await mkUser(997);
+    const notOwnerAgent = await loginAgent(notOwner.email, "Password123!");
+
+    const res = await notOwnerAgent.post(
+      `/api/groups/${createRes.body.groupId}/join-requests/${joinRes.body.requestId}/decline`
+    );
+
+    expect(res.status).toBe(403);
+    expect(res.body?.error).toBe("FORBIDDEN");
+    expect(typeof res.body?.message).toBe("string");
+  });
+
+  it("POST /api/groups/:groupId/join-requests/:requestId/approve -> 404 group not found", async () => {
+    const owner = await mkUser(999);
+    const ownerAgent = await loginAgent(owner.email, "Password123!");
+
+    const res = await ownerAgent.post(
+      `/api/groups/99999999/join-requests/1/approve`
+    );
+
+    expect(res.status).toBe(404);
+    expect(res.body?.error).toBe("NOT_FOUND");
+    expect(typeof res.body?.message).toBe("string");
+  });
+
+  it("POST /api/groups/:groupId/join-requests/:requestId/decline -> 404 group not found", async () => {
+    const owner = await mkUser(999);
+    const ownerAgent = await loginAgent(owner.email, "Password123!");
+
+    const res = await ownerAgent.post(
+      `/api/groups/99999999/join-requests/1/decline`
+    );
+
+    expect(res.status).toBe(404);
+    expect(res.body?.error).toBe("NOT_FOUND");
+    expect(typeof res.body?.message).toBe("string");
+  });
+
+  it("POST /api/groups/:groupId/join-requests/:requestId/approve -> 404 join request not found", async () => {
+    const owner = await mkUser(999);
+    const ownerAgent = await loginAgent(owner.email, "Password123!");
+
+    const createRes = await ownerAgent
+      .post("/api/groups")
+      .send({ groupName: "Test Group", isPublic: true });
+
+    expect(createRes.status).toBe(201);
+
+    const res = await ownerAgent.post(
+      `/api/groups/${createRes.body.groupId}/join-requests/99999999/approve`
+    );
+
+    expect(res.status).toBe(404);
+    expect(res.body?.error).toBe("NOT_FOUND");
+    expect(typeof res.body?.message).toBe("string");
+  });
+
+  it("POST /api/groups/:groupId/join-requests/:requestId/decline -> 404 join request not found", async () => {
+    const owner = await mkUser(999);
+    const ownerAgent = await loginAgent(owner.email, "Password123!");
+
+    const createRes = await ownerAgent
+      .post("/api/groups")
+      .send({ groupName: "Test Group", isPublic: true });
+
+    expect(createRes.status).toBe(201);
+
+    const res = await ownerAgent.post(
+      `/api/groups/${createRes.body.groupId}/join-requests/99999999/decline`
+    );
+
+    expect(res.status).toBe(404);
+    expect(res.body?.error).toBe("NOT_FOUND");
+    expect(typeof res.body?.message).toBe("string");
+  });
+
+  it("POST /api/groups/:groupId/join-requests/:requestId/approve -> 409 request not pending", async () => {
+    const owner = await mkUser(999);
+    const ownerAgent = await loginAgent(owner.email, "Password123!");
+
+    const createRes = await ownerAgent
+      .post("/api/groups")
+      .send({ groupName: "Test Group", isPublic: true });
+
+    expect(createRes.status).toBe(201);
+
+    const user = await mkUser(998);
+    const userAgent = await loginAgent(user.email, "Password123!");
+
+    const joinRes = await userAgent.post(
+      `/api/groups/${createRes.body.groupId}/join-requests`
+    );
+    expect(joinRes.status).toBe(201);
+
+    const firstApprove = await ownerAgent.post(
+      `/api/groups/${createRes.body.groupId}/join-requests/${joinRes.body.requestId}/approve`
+    );
+    expect(firstApprove.status).toBe(200);
+
+    const res = await ownerAgent.post(
+      `/api/groups/${createRes.body.groupId}/join-requests/${joinRes.body.requestId}/approve`
+    );
+
+    expect(res.status).toBe(409);
+    expect(res.body?.error).toBe("CONFLICT");
+    expect(typeof res.body?.message).toBe("string");
+  });
+
+  it("POST /api/groups/:groupId/join-requests/:requestId/decline -> 409 request not pending", async () => {
+    const owner = await mkUser(999);
+    const ownerAgent = await loginAgent(owner.email, "Password123!");
+
+    const createRes = await ownerAgent
+      .post("/api/groups")
+      .send({ groupName: "Test Group", isPublic: true });
+
+    expect(createRes.status).toBe(201);
+
+    const user = await mkUser(998);
+    const userAgent = await loginAgent(user.email, "Password123!");
+
+    const joinRes = await userAgent.post(
+      `/api/groups/${createRes.body.groupId}/join-requests`
+    );
+    expect(joinRes.status).toBe(201);
+
+    const firstDecline = await ownerAgent.post(
+      `/api/groups/${createRes.body.groupId}/join-requests/${joinRes.body.requestId}/decline`
+    );
+    expect(firstDecline.status).toBe(200);
+
+    const res = await ownerAgent.post(
+      `/api/groups/${createRes.body.groupId}/join-requests/${joinRes.body.requestId}/decline`
+    );
+
+    expect(res.status).toBe(409);
+    expect(res.body?.error).toBe("CONFLICT");
+    expect(typeof res.body?.message).toBe("string");
+  });
 
   afterAll(async () => {
     await prisma.$disconnect();
