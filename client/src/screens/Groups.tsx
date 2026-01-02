@@ -3,7 +3,9 @@ import { Box, Container, Typography, Collapse } from "@mui/material";
 import { motion } from "framer-motion";
 import FilterCard from "../components/FilterCard";
 import GroupCard from "../components/GroupCard";
+import CreateGroupCard from "../components/CreateGroupCard";
 import { getGroups, type GroupListItemDTO } from "../services/dbService";
+import { useUser } from "../context/useUser";
 
 type GroupSort = "name_asc" | "name_desc" | "created_newest" | "created_oldest";
 
@@ -32,6 +34,7 @@ export default function Groups() {
     const [loading, setLoading] = useState<boolean>(true);
 
     const [filtersOpen, setFiltersOpen] = useState<boolean>(false);
+    const { user } = useUser();
 
     useEffect(() => {
         setFiltersOpen(true);
@@ -58,6 +61,10 @@ export default function Groups() {
     const visibleGroups = useMemo(() => {
         return sortGroups(results, groupSort);
     }, [results, groupSort]);
+
+    const handleGroupCreated = (group: GroupListItemDTO) => {
+        setResults((prev) => [...prev, group]);
+    };
 
     return (
         <Box
@@ -110,6 +117,12 @@ export default function Groups() {
 
                     {/* Results (grid) */}
                     <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                        {user && (
+                            <Box sx={{ mb: { xs: "1.25rem", md: "1.5rem" } }}>
+                                <CreateGroupCard onCreated={handleGroupCreated} />
+                            </Box>
+                        )}
+
                         <Box
                             sx={{
                                 display: "grid",
