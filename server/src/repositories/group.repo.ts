@@ -18,10 +18,11 @@ export const groupRepo = {
             select: {
                 id: true,
                 name: true,
+                owner: { select: { id: true, username: true } },
                 ownerId: true,
                 isPublic: true,
                 createdAt: true,
-                members: { select: { id: true } },
+                members: { select: { id: true, username: true } },
             },
         }),
 
@@ -36,9 +37,10 @@ export const groupRepo = {
             select: {
                 id: true,
                 name: true,
+                owner: { select: { id: true, username: true } },
                 isPublic: true,
                 createdAt: true,
-                members: { select: { id: true } },
+                members: { select: { id: true, username: true } },
             },
         }),
 

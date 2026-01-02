@@ -59,6 +59,35 @@ export const groupController = {
         }
     },
 
+    getJoinRequestStatus: async (req: AuthRequest, res: Response) => {
+        try {
+            const userId = req.userId;
+            if (!userId) {
+                return res.status(401).json({ error: "UNAUTHORIZED", message: "Authentication required" });
+            }
+
+            const parsed = GroupIdParamsDTO.safeParse(req.params);
+            if (!parsed.success) {
+                return res.status(400).json({ error: "VALIDATION_ERROR", message: "groupId must be a positive integer" });
+            }
+
+            const { groupId } = parsed.data;
+            const result = await groupJoinRequestService.findForUser(groupId, userId);
+
+            if (result.status === 404) {
+                return res.status(404).json({ error: "NOT_FOUND", message: "Join request not found" });
+            }
+
+            const out = JoinRequestDTO.parse(result.dto);
+            return res.status(200).json(out);
+        } catch (error) {
+            req.log.error({ err: error }, "Error fetching join request status");
+            return res
+                .status(500)
+                .json({ error: "INTERNAL_SERVER_ERROR", message: "Error fetching join request status" });
+        }
+    },
+
     createGroup: async (req: AuthRequest, res: Response) => {
         try {
             const userId = req.userId;

@@ -42,7 +42,8 @@ export const GroupWithMembersDTO = z
         groupId: z.number().int().min(1),
         groupName: z.string().min(1),
         isPublic: z.boolean(),
-        members: z.array(z.number().int().min(1)),
+        owner: z.object({ id: z.number().int().min(1), username: z.string().min(1) }),
+        members: z.array(z.object({ id: z.number().int().min(1), username: z.string().min(1) })),
         createdAt: ISODateTimeString,
     })
     .strict();

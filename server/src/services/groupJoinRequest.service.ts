@@ -75,4 +75,24 @@ export const groupJoinRequestService = {
             },
         };
     },
+
+    findForUser: async (groupId: number, requesterId: number) => {
+        const group = await groupRepo.getById(groupId);
+        if (!group) return { status: 404 as const };
+
+        const jr = await groupJoinRequestRepo.findFirst(groupId, requesterId);
+        if (!jr) return { status: 404 as const };
+
+        return {
+            status: 200 as const,
+            dto: {
+                requestId: jr.id,
+                groupId: jr.groupId,
+                userId: jr.userId,
+                status: jr.status,
+                createdAt: jr.createdAt.toISOString(),
+                decidedAt: jr.decidedAt ? jr.decidedAt.toISOString() : undefined,
+            },
+        };
+    },
 };
